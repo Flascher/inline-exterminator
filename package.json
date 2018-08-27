@@ -1,0 +1,27 @@
+{
+  "name": "inline-annihilator",
+  "version": "1.0.0",
+  "description": "Takes inline style tags from input, removes them, and outputs a css file with classes matching inline styles",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Flascher/inline-annihilator.git"
+  },
+  "keywords": [
+    "inline",
+    "style",
+    "remove",
+    "remover",
+    "extract",
+    "css"
+  ],
+  "author": "Flascher",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Flascher/inline-annihilator/issues"
+  },
+  "homepage": "https://github.com/Flascher/inline-annihilator#readme"
+}
