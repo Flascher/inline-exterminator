@@ -34,9 +34,9 @@ const classMap = new Map();
 
 // file loading
 const getFileContents = (filename) => {
-    return readFile(filename, 'utf8').catch(e => {
-      console.error(`Error loading file <${filename}>: ${e}`);
-    });
+  return readFile(filename, 'utf8').catch(e => {
+    console.error(`Error loading file <${filename}>: ${e}`);
+  });
 }
 
 // css file write stream
@@ -46,7 +46,28 @@ const createCssStream = (filename) => {
 
 // current html document write stream
 const createDocumentStream = (filename) => {
-  return fs.createWriteStream(filename)
+  let stream;
+
+  // check if the file exists, if it doesn't create it
+  if (!fs.existsSync(`${__dirname}/${filename}`)) {
+    fs.appendFileSync(filename);
+  }
+  
+  stream = fs.createWriteStream(filename);
+  return stream;
+}
+
+// create new filename for current file if no-replace flag is used
+const createModifiedName = (filename, modifier) => {
+  const splitFilename = filename.split('.');
+  const splitLength = splitFilename.length;
+
+  splitFilename.splice(splitLength - 1, 0, `${modifier}`);
+  return splitFilename.join('.');
+}
+
+const removeWhitespace = (str) => {
+  return str.replace(/\s/g, '');
 }
 
 // find tags with the undesirables
@@ -79,10 +100,20 @@ const inlineStylesToCssFile = (tags, cssFile) => {
   tags.map((tag, i) => {
     if (tag.name === 'style') {
       // take style tag innerText and just move it straight to the css file
+      const styles = tag.children[0].data;
 
       // we'll have to parse the css to get the properties out of it and check to see if we can
       // match any inline styles to currently existing classes
-      
+      const propertiesRegex = /[^{]+(?=})/gi; // grabs any properties from between the {}'s in a css rule
+      styles.match(propertiesRegex).map(match => {
+        // check properties of classes against classes already in the hash map
+        // put them in the hashmap if they aren't yet, and write the styles to
+        // the css file
+        removeWhitespace(match)
+        // TODO: check to make sure that all of these matches are classes only
+        // all other selectors don't matter for inline style cleanup and can be moved
+        // directly into the css file
+      });
     } else {
       const inlineStyle = tag.attribs.style;
 
@@ -90,14 +121,16 @@ const inlineStylesToCssFile = (tags, cssFile) => {
       if (!hasMatchingClass(inlineStyle)) {
         const randomClass = nameGenerator.generate('-');
         const cssString = generateCssClassFromInlineStyle(randomClass, inlineStyle);
-        classMap.set(inlineStyle, randomClass);
+        // remove whitespace from properties for format-agnostic duplicate checking
+        const classKey = removeWhitespace(inlineStyle);
+        classMap.set(classKey, randomClass);
         cssFile.write(cssString);
       }
     }
   });
 }
 
-const convertTagsToClass = (tags, htmlFile) => {
+const cleanHtmlTags = (tags, htmlFile) => {
   
 }
 
@@ -109,12 +142,15 @@ const run = async () => {
     let fileContents = await getFileContents(options.src[i]);
     const $ = cheerio.load(fileContents, { xmlMode: true, normalizeWhitespace: true });
     
-    const htmlFile = createDocumentStream(htmlOutput);
+    // const htmlOutput = options['no-replace'] === undefined
+    //   ? options.src[i]
+    //   : createModifiedName(options.src[i], options['no-replace']);
+    // const htmlFile = createDocumentStream(htmlOutput);
 
     const badStyles = getBadStyles($);
     inlineStylesToCssFile(badStyles, cssFile);
 
-    htmlFile.close();
+    // htmlFile.close();
   }
 
   cssFile.close();
