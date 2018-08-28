@@ -97,7 +97,9 @@ const inlineStylesToCssFile = (tags, cssFile) => {
   });
 }
 
-const convertTagsToClass = (tags, htmlFile)
+const convertTagsToClass = (tags, htmlFile) => {
+  
+}
 
 // do the stuff
 const run = async () => {
