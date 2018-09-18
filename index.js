@@ -113,6 +113,8 @@ const addStyleToMap = (minifiedCss, className) => {
   if (className !== undefined) {
     key = minifiedCss;
     value = className;
+
+    styleMap.set(key, value);
   }
   // if there's no matching class, we should create one, put it in the hash map, and write to the css file
   else if (!hasMatchingClass(minifiedCss)) {
@@ -120,9 +122,9 @@ const addStyleToMap = (minifiedCss, className) => {
     key = minifiedCss;
     // remove whitespace from properties for format-agnostic duplicate checking
     value = randomClass;
-  }
 
-  styleMap.set(key, value);
+    styleMap.set(key, value);
+  }
 }
 
 const styleMapToCssFile = (filename) => {
@@ -196,14 +198,18 @@ const cleanHtmlTags = ($) => {
 }
 
 const cheerioToFile = ($, htmlOutput) => {
-  fs.appendFileSync(htmlOutput, pd.xml($.html()));
+  fs.writeFileSync(htmlOutput, pd.xml($.html()));
 }
 
 // do the stuff
 const run = async () => {
   for (let i = 0; i < options.src.length; i++) {
     let fileContents = await getFileContents(options.src[i]);
-    const $ = cheerio.load(fileContents, { xmlMode: true, normalizeWhitespace: true });
+    const loadOptions = {
+      xmlMode: true,
+      normalizeWhitespace: false
+    }
+    const $ = cheerio.load(fileContents, loadOptions);
     
     const badStyles = getBadStyles($);
     inlineStylesToStyleMap(badStyles);
