@@ -4,7 +4,7 @@
   "description": "Takes inline style tags from input, removes them, and outputs a css file with classes matching inline styles",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node index.js example.jsp -o example-jsp.css --no-replace modified"
   },
   "repository": {
     "type": "git",
