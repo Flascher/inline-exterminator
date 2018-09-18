@@ -1,33 +1,14 @@
 const fs = require('fs');
 const { promisify, inspect } = require('util');
-const commandLineArgs = require('command-line-args');
 const cheerio = require('cheerio');
 const nameGenerator = require('unique-names-generator');
 const pd = require('pretty-data').pd;
 
+const options = require('./command-line').options;
+const usage = require('./command-line').usage;
+
 // promisified functions
 const readFile = promisify(fs.readFile);
-
-// ========================
-//   command line options
-// ========================
-//
-// <src> : files to run script on
-// <directory>  : directory to run script on
-// <recursive>  : whether to operate on subdirectories of directory
-// <filetype>   : filetypes to work on (*.jsp, *.html, *.asp, etc)
-// <no-replace> : doesn't modify specified files if not null, generates new modified copies instead using the string as the suffix to the filename
-// <output>     : name of the css file to put the stripped inline styles in
-const optionDefinitions = [
-  { name: 'src', type: String, multiple: true, defaultOption: true },
-  { name: 'directory', alias: 'd', type: String },
-  { name: 'recursive', alias: 'r', type: Boolean },
-  { name: 'filetype', alias: 't', type: String },
-  { name: 'no-replace', alias: 'n', type: String },
-  { name: 'output', alias: 'o', type: String }
-];
-
-const options = commandLineArgs(optionDefinitions);
 
 // global hashmap to keep track of classes that have already been created
 // this should reduce or eliminate any classes that would otherwise have duplicate properties
@@ -203,25 +184,29 @@ const cheerioToFile = ($, htmlOutput) => {
 
 // do the stuff
 const run = async () => {
-  for (let i = 0; i < options.src.length; i++) {
-    let fileContents = await getFileContents(options.src[i]);
-    const loadOptions = {
-      xmlMode: true,
-      normalizeWhitespace: false
+  if (options.help) {
+    console.log(usage);
+  } else {
+    for (let i = 0; i < options.src.length; i++) {
+      let fileContents = await getFileContents(options.src[i]);
+      const loadOptions = {
+        xmlMode: true,
+        normalizeWhitespace: false
+      }
+      const $ = cheerio.load(fileContents, loadOptions);
+      
+      const badStyles = getBadStyles($);
+      inlineStylesToStyleMap(badStyles);
+      
+      styleMapToCssFile(options.output);
+      
+      const htmlOutput = options['no-replace'] === undefined
+        ? options.src[i]
+        : createModifiedName(options.src[i], options['no-replace']);
+  
+      cleanHtmlTags($);
+      cheerioToFile($, htmlOutput);
     }
-    const $ = cheerio.load(fileContents, loadOptions);
-    
-    const badStyles = getBadStyles($);
-    inlineStylesToStyleMap(badStyles);
-    
-    styleMapToCssFile(options.output);
-    
-    const htmlOutput = options['no-replace'] === undefined
-      ? options.src[i]
-      : createModifiedName(options.src[i], options['no-replace']);
-
-    cleanHtmlTags($);
-    cheerioToFile($, htmlOutput);
   }
 }
 
