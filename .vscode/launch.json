@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Launch Program",
             "program": "${workspaceFolder}/index.js",
-            "args": ["Hold-Document-Results.html", "-o", "test.css", "--no-replace", "modified"]
+            "args": ["example.jsp", "-o", "test.css", "--no-replace", "modified"]
         }
     ]
 }
