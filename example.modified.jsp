@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
-<%@  page="page" language="java" contentType="text/html; charset=ISO-8859-1" pageEncoding="ISO-8859-1" %="%">
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
+    pageEncoding="ISO-8859-1"%>
     
-	<%--taglib  directive="directive" --%="--%">
-<%@  taglib="taglib" uri="http://java.sun.com/jsp/jstl/core" prefix="c" %="%">
+	<%--taglib directive --%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
-	<%--  52="52" Video="Video" --%="--%">
-<%@  taglib="taglib" uri="http://java.sun.com/jsp/jstl/sql" prefix="sql" %="%">
+	<%-- Video 52 --%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/sql" prefix="sql" %>
 	
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html  xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta />
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
 
-	<%--  LINK="LINK" THE="THE" STYLE="STYLE" SHEET="SHEET" --%="--%">
-<link />
+	<%-- LINK THE STYLE SHEET --%>
+<link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath }/styles/Video_50_homePage.css" />
 
 <title>Vid 52 Using vid_53 database</title>
 <style>
@@ -27,27 +28,27 @@ th, td
 padding:5px;
 }
 </style>
-</%--></head>
+</head>
 <body>
-<div  id="wrapper" style="undefined" class="weird-rose-basilisk">
+<div id="wrapper" class="main-coral-tapir">
 
-<c:import  url="Video_51_header.jsp">
+<c:import url="Video_51_header.jsp">
 	<c:param></c:param>
 </c:import>
 	
-	<div  id="content" class="testing testing123">
+	<div id="content" class="testing testing123">
 		<h1>Database: vid_53, image data table</h1>
 			
 			
 	<sql:setDataSource></sql:setDataSource>
 	
-	<sql:query  var="rabbit" dataSource="${bunny }">SELECT id, imageName, image_extension FROM images</sql:query>
+	<sql:query var="rabbit" dataSource="${bunny }">SELECT id, imageName, image_extension FROM images</sql:query>
 		
-	<table  style="undefined" class="weird-rose-basilisk">
+	<table class="main-coral-tapir">
 		<tr><th>id</th><th>name</th><th>extension</th></tr>
-		<c:forEach  var="row" items="${rabbit.rows }">	
+		<c:forEach var="row" items="${rabbit.rows }">	
 			<tr>
-			<th  style="undefined" class="mammoth-turquoise-dove">record ${row.id }</th><td>${row.imageName }</td><td>${row.image_extension }</td>
+			<th class="accused-harlequin-tern">record ${row.id }</th><td>${row.imageName }</td><td>${row.image_extension }</td>
 			</tr>	
 		</c:forEach>	
 	</table>	
@@ -58,4 +59,4 @@ padding:5px;
 		
 </div>		
 </body>
-</html></%@></%--></%@></%--taglib></%@>
+</html>

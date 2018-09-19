@@ -16,6 +16,18 @@ const voidElements = [
   'wbr'
 ];
 
+const serverSideElements = [
+  '%',
+  '%#',
+  '%:',
+  '%=',
+  '%@',
+  '%--',
+  '%--taglib',
+  '?=',
+  '?',
+];
+
 const html = (item, parent, eachFn) => {
   if (Array.isArray(item)) {
     return item.map(subItem => html(subItem, parent, eachFn)).join('');
@@ -27,10 +39,6 @@ const html = (item, parent, eachFn) => {
   }
 
   if (typeof item !== undefined && typeof item.type !== undefined) {
-    if (item.type === 'tag') {
-
-    }
-
     switch (item.type) {
       case 'text':
         return item.data;
@@ -44,12 +52,26 @@ const html = (item, parent, eachFn) => {
       case 'style':
       case 'script':
       case 'tag':
+        // check to see if tag is a serverside element that we don't want to bother with
+        if (serverSideElements.includes(item.name)) {
+          if (item.children) {
+            return `<${item.raw}>${html(item.children, original, eachFn)}`;
+          } else {
+            return `<${item.raw}>`;
+          }
+        }
+
         let result = '';
         let attrStr = '';
         if (item.attribs && Object.keys(item.attribs).length > 0) {
-          let attrs = Object.keys(item.attribs).map(key => `${key}="${item.attribs[key]}"`);
+          // removes any attributes that have a value of undefined
+          let attrs = Object.keys(item.attribs).filter(key => {
+            return item.attribs[key] !== undefined;
+          })
+          
+          .map(key => `${key}="${item.attribs[key]}"`);
           if (attrs.length > 0) {
-            attrs.unshift(' ');
+            attrs[0] = ` ${attrs[0]}`;
           }
           attrStr = attrs.join(' ');
         }
@@ -60,11 +82,9 @@ const html = (item, parent, eachFn) => {
           }
 
           const children = html(item.children, original, eachFn)
-          const isVoidElement = voidElements.includes(item.name);
-          const closingTag = isVoidElement ? ' />' : `</${item.name}>`
-          result = `<${item.name}${attrStr}>${html(item.children, original, eachFn)}${closingTag}`;
+          result = `<${item.name}${attrStr}>${children}</${item.name}>`;
         } else if (voidElements.includes(item.name)) {
-          result = `<${item.name} />`;
+          result = `<${item.name}${attrStr} />`;
         } else {
           result = `<${item.name}></${item.name}>`;
         }
