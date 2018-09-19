@@ -1,14 +1,13 @@
 const fs = require('fs');
-const { promisify, inspect } = require('util');
-const cheerio = require('cheerio');
+const { inspect } = require('util');
+const htmlparser = require('htmlparser');
+const html = require('htmlparser-to-html');
+const $ = require('soupselect').select;
 const nameGenerator = require('unique-names-generator');
 const pd = require('pretty-data').pd;
 
 const options = require('./command-line').options;
 const usage = require('./command-line').usage;
-
-// promisified functions
-const readFile = promisify(fs.readFile);
 
 // global hashmap to keep track of classes that have already been created
 // this should reduce or eliminate any classes that would otherwise have duplicate properties
@@ -23,27 +22,7 @@ const printStyleMap = () => {
 
 // file loading
 const getFileContents = (filename) => {
-  return readFile(filename, 'utf8').catch(e => {
-    console.error(`Error loading file <${filename}>: ${e}`);
-  });
-}
-
-// css file write stream
-const createCssStream = (filename) => {
-  return fs.createWriteStream(filename);
-}
-
-// current html document write stream
-const createDocumentStream = (filename) => {
-  let stream;
-
-  // check if the file exists, if it doesn't create it
-  if (!fs.existsSync(`${__dirname}/${filename}`)) {
-    fs.appendFileSync(filename);
-  }
-  
-  stream = fs.createWriteStream(filename);
-  return stream;
+  return fs.readFileSync(filename, 'utf8');
 }
 
 // create new filename for current file if no-replace flag is used
@@ -60,8 +39,8 @@ const removeWhitespace = (str) => {
 }
 
 // find tags with the undesirables
-const getBadStyles = ($) => {
-  return $('[style], style').toArray();
+const getBadStyles = (dom) => {
+  return $(dom, '[style]').concat($(dom, 'style'));
 }
 
 // takes cheerio's attr object for the inline style, and transforms it to its own class with css syntax
@@ -118,13 +97,13 @@ const styleMapToCssFile = (filename) => {
 
 }
 
-const inlineStylesToStyleMap = (tags) => {
-  tags.map((tag, i) => {
-    if (tag.name === 'style') {
+const addInlineStylesToStyleMap = (dom) => {
+  dom.map(node => {
+    if (node.name === 'style') {
       // this if case handles style tags
 
       // take style tag innerText and just move it straight to the css file
-      let styles = tag.children[0].data;
+      let styles = node.children[0].data;
 
       // we'll have to parse the css to get the properties out of it and check to see if we can
       // match any inline styles to currently existing classes
@@ -154,58 +133,92 @@ const inlineStylesToStyleMap = (tags) => {
     } else {
       // else case handles style attributes
 
-      const inlineStyle = tag.attribs.style;
+      const inlineStyle = node.attribs.style;
       addStyleToMap(removeWhitespace(inlineStyle));
     }
   });
 }
 
-const cleanHtmlTags = ($) => {
-  // clean up inline style attributes
-  const styleAttrs = $('[style]');
+const cleanNode = (node) => {
+  if (node.attribs && node.attribs.style) {
+    const minStyle = removeWhitespace(node.attribs.style);
+    const replacementClass = styleMap.get(minStyle);
 
-  styleAttrs.toArray().forEach((styleAttr) => {
-    const className = styleMap.get(styleAttr.attribs.style);
-    
-    $(styleAttr).removeAttr('style');
-    $(styleAttr).addClass(className);
-  });
+    if (!node.attribs.class) {
+      node.attribs.class = replacementClass;
+    } else {
+      node.attribs.class = ` ${replacementClass}`;
+    }
 
-  // clean up inline style tags
-  // tags have already been moved over to the css file output by
-  // inlineStylesToStyleMap and styleMapToCssFile
-  // so we just need to delete any style tags
-  $('style').remove();
+    // remove that nasty inline style
+    node.attribs.style = undefined;
+  }
+
+  return node;
 }
 
-const cheerioToFile = ($, htmlOutput) => {
-  fs.writeFileSync(htmlOutput, pd.xml($.html()));
+const replaceStyleAttrs = (node) => {
+  if (!node.children) {
+    // we've hit a leaf, return the cleaned leaf
+    return cleanNode(node);
+  }
+  cleanNode(node);
+
+  return node.children.map(replaceStyleAttrs);
+}
+
+const cleanHtmlTags = (dom) => {
+  // filter out style tags first
+  dom = dom.filter(node => {
+    return node.name !== 'style'
+  });
+
+  // then map to replace inline style attrs with classes
+  dom.map(replaceStyleAttrs);
+}
+
+const outputModifiedSrcFile = (dom, htmlOutput) => {
+  html.configure({ disableAttribEscape: true });
+  const rawHtmlOutput = html(dom)
+  fs.writeFileSync(htmlOutput, pd.xml(rawHtmlOutput));
+}
+
+const parseHandler = new htmlparser.DefaultHandler((err, dom) => {
+  if (err) {
+    console.error(err);
+    process.exit(1); // oh no something bad happened.
+  } else {
+    cleanSrcFile(dom);
+  }
+});
+
+let currentFile = '';
+
+const cleanSrcFile = (dom) => {
+  const badStyles = getBadStyles(dom);
+  addInlineStylesToStyleMap(badStyles);
+  
+  styleMapToCssFile(options.output);
+  
+  const htmlOutput = options['no-replace'] === undefined
+    ? currentFile
+    : createModifiedName(currentFile, options['no-replace']);
+
+  cleanHtmlTags(dom);
+  outputModifiedSrcFile(dom, htmlOutput);
 }
 
 // do the stuff
-const run = async () => {
+const run = () => {
   if (options.help) {
     console.log(usage);
   } else {
     for (let i = 0; i < options.src.length; i++) {
-      let fileContents = await getFileContents(options.src[i]);
-      const loadOptions = {
-        xmlMode: true,
-        normalizeWhitespace: false
-      }
-      const $ = cheerio.load(fileContents, loadOptions);
+      currentFile = options.src[i];
+      let fileContents = getFileContents(currentFile);
       
-      const badStyles = getBadStyles($);
-      inlineStylesToStyleMap(badStyles);
-      
-      styleMapToCssFile(options.output);
-      
-      const htmlOutput = options['no-replace'] === undefined
-        ? options.src[i]
-        : createModifiedName(options.src[i], options['no-replace']);
-  
-      cleanHtmlTags($);
-      cheerioToFile($, htmlOutput);
+      let parser = new htmlparser.Parser(parseHandler);
+      parser.parseComplete(fileContents);
     }
   }
 }

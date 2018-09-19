@@ -30,13 +30,13 @@ padding:5px;
 </style>
 </head>
 <body>
-<div id="wrapper">
+<div id="wrapper" style="text-align:left;">
 
 <c:import url="Video_51_header.jsp">
 	<c:param name="tagLine" value="Take My Love, Take My Land...You Can't Take The Sky From Me!"></c:param>
 </c:import>
 	
-	<div id="content">
+	<div id="content" class="testing testing123">
 		<h1>Database: vid_53, image data table</h1>
 			
 			
@@ -44,11 +44,11 @@ padding:5px;
 	
 	<sql:query var="rabbit" dataSource="${bunny }">SELECT id, imageName, image_extension FROM images</sql:query>
 		
-	<table>
+	<table style="text-align:left;">
 		<tr><th>id</th><th>name</th><th>extension</th></tr>
 		<c:forEach var="row" items="${rabbit.rows }" >	
 			<tr>
-			<th>record ${row.id }</th><td>${row.imageName }</td><td>${row.image_extension }</td>
+			<th style="font-weight:bold">record ${row.id }</th><td>${row.imageName }</td><td>${row.image_extension }</td>
 			</tr>	
 		</c:forEach>	
 	</table>	
