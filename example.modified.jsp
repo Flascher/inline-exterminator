@@ -17,20 +17,10 @@
 <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath }/styles/Video_50_homePage.css" />
 
 <title>Vid 52 Using vid_53 database</title>
-<style>
-table, th, td
-{
-border-collapse:collapse;
-border:1px solid black;
-}
-th, td
-{
-padding:5px;
-}
-</style>
+
 </head>
 <body>
-<div id="wrapper" class="main-coral-tapir">
+<div id="wrapper" class="sound-emerald-piranha">
 
 <c:import url="Video_51_header.jsp">
 	<c:param></c:param>
@@ -44,11 +34,11 @@ padding:5px;
 	
 	<sql:query var="rabbit" dataSource="${bunny }">SELECT id, imageName, image_extension FROM images</sql:query>
 		
-	<table class="main-coral-tapir">
+	<table class="sound-emerald-piranha">
 		<tr><th>id</th><th>name</th><th>extension</th></tr>
 		<c:forEach var="row" items="${rabbit.rows }">	
 			<tr>
-			<th class="accused-harlequin-tern">record ${row.id }</th><td>${row.imageName }</td><td>${row.image_extension }</td>
+			<th class="controversial-gold-raven">record ${row.id }</th><td>${row.imageName }</td><td>${row.image_extension }</td>
 			</tr>	
 		</c:forEach>	
 	</table>	

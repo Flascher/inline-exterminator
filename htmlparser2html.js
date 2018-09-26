@@ -38,7 +38,7 @@ const html = (item, parent, eachFn) => {
     item = eachFn(item, parent);
   }
 
-  if (typeof item !== undefined && typeof item.type !== undefined) {
+  if (item != undefined && item.type !== undefined) {
     switch (item.type) {
       case 'text':
         return item.data;
@@ -97,4 +97,4 @@ const html = (item, parent, eachFn) => {
   return item;
 }
 
-exports.html = html;
+exports.html = (dom, eachFn) => html(dom, null, eachFn);

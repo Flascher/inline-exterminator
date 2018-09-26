@@ -45,7 +45,7 @@ const getBadStyles = (dom) => {
 }
 
 // takes cheerio's attr object for the inline style, and transforms it to its own class with css syntax
-const generateCssClassFromInlineStyle = (className, styleAttr) => {
+const generateCssRuleFromInlineStyle = (rule, styleAttr) => {
   // filter out any empty strings. if last character in styleAttr is ; then it will have an empty string at the end of the array
   const properties = styleAttr.split(';').filter(property => property.length > 0);
   const numProperties = properties.length;
@@ -57,7 +57,7 @@ const generateCssClassFromInlineStyle = (className, styleAttr) => {
   });
   const propertiesString = styleProperties.join('');
 
-  const classString = `.${className} {\n${propertiesString}\n}\n\n`;
+  const classString = `.${rule} {\n${propertiesString}\n}\n\n`;
 
   return classString;
 };
@@ -92,7 +92,7 @@ const styleMapToCssFile = (filename) => {
   // key = styles (no whitespace) that belong to a class
   // value = the class name that contains the styles in its key
   styleMap.forEach((v, k) => {
-    const cssString = generateCssClassFromInlineStyle(v, k);
+    const cssString = generateCssRuleFromInlineStyle(v, k);
     fs.appendFileSync(options.output, cssString);
   });
 
@@ -100,40 +100,8 @@ const styleMapToCssFile = (filename) => {
 
 const addInlineStylesToStyleMap = (dom) => {
   dom.map(node => {
-    if (node.name === 'style') {
-      // this if case handles style tags
-
-      // take style tag innerText and just move it straight to the css file
-      let styles = node.children[0].data;
-
-      // we'll have to parse the css to get the properties out of it and check to see if we can
-      // match any inline styles to currently existing classes
-
-      // each match will have 3 capture groups.
-      // 0th is the full match
-      // 1st being the className (including the .)
-      // 2nd is the properties contained within that class
-      // css passed into cssRegex MUST be minified (remove whitespace / newlines)
-      styles = removeWhitespace(styles);
-      const cssRegex = /(?:\.(\w*))(?:{(.*?\s*)})*/gmi;
-      const matches = [];
-      
-      // find all matches of regex in the style tag's innerText
-      let match = cssRegex.exec(styles);
-      while (match !== null) {
-        matches.push(match);
-        match = cssRegex.exec(styles);
-      }
-    
-      const classNames = matches.map(match => match[1]);
-      const properties = matches.map(match => match[2]);
-
-      for (let i = 0; i < properties.length; i++) {
-        addStyleToMap(properties[i], classNames[i]);
-      }
-    } else {
-      // else case handles style attributes
-
+    if (node.attribs) {
+      // find and handle inline style attributes
       const inlineStyle = node.attribs.style;
       addStyleToMap(removeWhitespace(inlineStyle));
     }
@@ -178,9 +146,47 @@ const cleanHtmlTags = (dom) => {
   dom.map(replaceStyleAttrs);
 }
 
+const removeStyleTags = (node, parent) => {
+  if(node.name === 'style') {
+    // take style tag innerText and just move it straight to the css file
+    let styles = node.children[0].data;
+
+    // we'll have to parse the css to get the properties out of it and check to see if we can
+    // match any inline styles to currently existing classes
+
+    // each match will have 3 capture groups.
+    // 0th is the full match
+    // 1st being the selector
+    // 2nd is the properties contained within that rule
+    const cssRegex = /(?:([^\{\}]*))(?:{(.*?\s*)})*/gi;
+    const matches = [];
+    
+    // find all matches of regex in the style tag's innerText
+    styles = removeWhitespace(styles);
+    let match = cssRegex.exec(styles);
+    // if the full match is an empty string we're also done
+    while (match !== null && match[0] !== '') {
+      matches.push(match);
+      match = cssRegex.exec(styles);
+    }
+
+    let cssArr = matches.map(match => {
+      return `${match[1]} {\n  ${match[2]}\n}\n\n`;
+    });
+
+    const cssOutput = cssArr.join('');
+
+    fs.appendFileSync(options.output, cssOutput);
+
+    return undefined; // remove self from DOM
+  } else {
+    return node; // otherwise no touchy
+  }
+}
+
 const outputModifiedSrcFile = (dom, htmlOutput) => {
   // html.configure({ disableAttribEscape: true });
-  const rawHtmlOutput = html(dom)
+  const rawHtmlOutput = html(dom, removeStyleTags)
   fs.writeFileSync(htmlOutput, rawHtmlOutput);
 }
 
@@ -199,11 +205,12 @@ const cleanSrcFile = (dom) => {
   const badStyles = getBadStyles(dom);
   addInlineStylesToStyleMap(badStyles);
   
-  styleMapToCssFile(options.output);
   
   const htmlOutput = options['no-replace'] === undefined
     ? currentFile
     : createModifiedName(currentFile, options['no-replace']);
+  
+  styleMapToCssFile(options.output);
 
   cleanHtmlTags(dom);
   outputModifiedSrcFile(dom, htmlOutput);
