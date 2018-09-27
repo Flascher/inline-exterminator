@@ -5,7 +5,8 @@
   "main": "dist/inline-exterminator.js",
   "scripts": {
     "test": "babel-node --presets env src/index.js example.jsp -o example_jsp.css --no-replace modified",
-    "build": "babel src --out-file dist/inline-exterminator.js"
+    "build": "babel src --out-file dist/inline-exterminator.js && npm run shebang",
+    "shebang": "printf '%s\n%s\n' '#!/usr/bin/env/node' \"$(cat dist/inline-exterminator.js)\" > dist/inline-exterminator.js"
   },
   "repository": {
     "type": "git",
@@ -40,6 +41,7 @@
     "@babel/core": "^7.1.0",
     "@babel/node": "^7.0.0",
     "@babel/preset-env": "^7.1.0",
+    "babel-plugin-shebang": "0.0.0",
     "babel-preset-env": "^1.7.0"
   }
 }
