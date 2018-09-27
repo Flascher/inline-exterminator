@@ -6,7 +6,7 @@
   "scripts": {
     "test": "babel-node --presets env src/index.js example.jsp -o example_jsp.css --no-replace modified",
     "build": "babel src --out-file dist/inline-exterminator.js && npm run shebang",
-    "shebang": "printf '%s\n%s\n' '#!/usr/bin/env/node' \"$(cat dist/inline-exterminator.js)\" > dist/inline-exterminator.js"
+    "shebang": "printf '%s\n%s\n' '#!/usr/bin/env node' \"$(cat dist/inline-exterminator.js)\" > dist/inline-exterminator.js"
   },
   "repository": {
     "type": "git",
@@ -22,6 +22,7 @@
   ],
   "author": "Flascher",
   "license": "MIT",
+  "preferGlobal": true,
   "bin": {
     "inline-exterminator": "./dist/inline-exterminator.js"
   },
