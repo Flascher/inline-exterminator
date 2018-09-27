@@ -1,14 +1,10 @@
-const fs = require('fs');
-const { inspect } = require('util');
-const htmlparser = require('htmlparser');
-// const html = require('htmlparser-to-html');
-const $ = require('soupselect').select;
-const nameGenerator = require('unique-names-generator');
-const pd = require('pretty-data').pd;
+import fs from 'fs';
+import htmlparser from 'htmlparser';
+import { select as $ } from 'soupselect-update';
+import nameGenerator from 'unique-names-generator';
 
-const options = require('./command-line').options;
-const usage = require('./command-line').usage;
-const { html } = require('./htmlparser2html');
+import { options, usage } from './command-line';
+import html from './htmlparser2html';
 
 // global hashmap to keep track of classes that have already been created
 // this should reduce or eliminate any classes that would otherwise have duplicate properties

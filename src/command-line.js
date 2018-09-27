@@ -1,7 +1,7 @@
-const commandLineArgs = require('command-line-args');
-const commandLineUsage = require('command-line-usage');
+import commandLineArgs from 'command-line-args';
+import commandLineUsage from 'command-line-usage';
 
-const packageName = 'inline-annihilator';
+const packageName = 'inline-exterminator';
 
 // ========================
 //   command line options
@@ -102,5 +102,4 @@ const sections = [
 
 const usage = commandLineUsage(sections);
 
-exports.options = options;
-exports.usage = usage;
+export { options, usage };

@@ -1,32 +1,11 @@
-const voidElements = [
-  'area',
-  'base',
-  'br',
-  'col',
-  'embed',
-  'hr',
-  'img',
-  'input',
-  'keygen',
-  'link',
-  'meta',
-  'param',
-  'source',
-  'track',
-  'wbr'
-];
+"use strict";
 
-const serverSideElements = [
-  '%',
-  '%#',
-  '%:',
-  '%=',
-  '%@',
-  '%--',
-  '%--taglib',
-  '?=',
-  '?',
-];
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+const voidElements = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
+const serverSideElements = ['%', '%#', '%:', '%=', '%@', '%--', '%--taglib', '?=', '?'];
 
 const html = (item, parent, eachFn) => {
   if (Array.isArray(item)) {
@@ -34,6 +13,7 @@ const html = (item, parent, eachFn) => {
   }
 
   let original = item;
+
   if (eachFn) {
     item = eachFn(item, parent);
   }
@@ -63,16 +43,17 @@ const html = (item, parent, eachFn) => {
 
         let result = '';
         let attrStr = '';
+
         if (item.attribs && Object.keys(item.attribs).length > 0) {
           // removes any attributes that have a value of undefined
           let attrs = Object.keys(item.attribs).filter(key => {
             return item.attribs[key] !== undefined;
-          })
-          
-          .map(key => `${key}="${item.attribs[key]}"`);
+          }).map(key => `${key}="${item.attribs[key]}"`);
+
           if (attrs.length > 0) {
             attrs[0] = ` ${attrs[0]}`;
           }
+
           attrStr = attrs.join(' ');
         }
 
@@ -81,20 +62,24 @@ const html = (item, parent, eachFn) => {
             original = parent;
           }
 
-          const children = html(item.children, original, eachFn)
+          const children = html(item.children, original, eachFn);
           result = `<${item.name}${attrStr}>${children}</${item.name}>`;
         } else if (voidElements.includes(item.name)) {
           result = `<${item.name}${attrStr} />`;
         } else {
           result = `<${item.name}></${item.name}>`;
         }
+
         return result;
+
       case 'cdata':
-        return `<![CDATA[${item.data}]]>`
+        return `<![CDATA[${item.data}]]>`;
     }
   }
 
   return item;
-}
+};
 
-exports.html = (dom, eachFn) => html(dom, null, eachFn);
+var _default = (dom, eachFn) => html(dom, null, eachFn);
+
+exports.default = _default;

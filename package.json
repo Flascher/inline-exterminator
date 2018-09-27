@@ -1,10 +1,11 @@
 {
-  "name": "inline-annihilator",
+  "name": "inline-exterminator",
   "version": "1.0.0",
   "description": "Takes inline style tags from input, removes them, and outputs a css file with classes matching inline styles",
-  "main": "index.js",
+  "main": "dist/inline-exterminator.js",
   "scripts": {
-    "test": "node index.js example.jsp -o example_jsp.css --no-replace modified"
+    "test": "babel-node --presets env src/index.js example.jsp -o example_jsp.css --no-replace modified",
+    "build": "babel src --out-file dist/inline-exterminator.js"
   },
   "repository": {
     "type": "git",
@@ -20,18 +21,25 @@
   ],
   "author": "Flascher",
   "license": "MIT",
+  "bin": {
+    "inline-exterminator": "./dist/index.js"
+  },
   "bugs": {
     "url": "https://github.com/Flascher/inline-annihilator/issues"
   },
   "homepage": "https://github.com/Flascher/inline-annihilator#readme",
   "dependencies": {
-    "cheerio": "^1.0.0-rc.2",
     "command-line-args": "^5.0.2",
     "command-line-usage": "^5.0.5",
     "htmlparser": "^1.7.7",
-    "htmlparser-to-html": "0.0.6",
-    "pretty-data": "^0.40.0",
-    "soupselect": "^0.2.0",
+    "soupselect-update": "^0.2.5",
     "unique-names-generator": "^1.0.13"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.1.0",
+    "@babel/core": "^7.1.0",
+    "@babel/node": "^7.0.0",
+    "@babel/preset-env": "^7.1.0",
+    "babel-preset-env": "^1.7.0"
   }
 }
