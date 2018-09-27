@@ -22,7 +22,7 @@
   "author": "Flascher",
   "license": "MIT",
   "bin": {
-    "inline-exterminator": "./dist/index.js"
+    "inline-exterminator": "./dist/inline-exterminator.js"
   },
   "bugs": {
     "url": "https://github.com/Flascher/inline-annihilator/issues"
