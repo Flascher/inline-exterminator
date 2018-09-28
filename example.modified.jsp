@@ -17,46 +17,35 @@
 <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath }/styles/Video_50_homePage.css" />
 
 <title>Vid 52 Using vid_53 database</title>
-<style >
-table, th, td
-{
-border-collapse:collapse;
-border:1px solid black;
-background-image: linear-gradient(to right, #000, #fff)
-}
-th, td
-{
-padding:5px;
-}
-</style>
+
 </head>
 <body>
-<div id="wrapper" style="text-align:left;">
+<div id="wrapper" class="quiet-brown-leopard">
 
 <c:import url="Video_51_header.jsp">
-	<c:param name="tagLine" value="Take My Love, Take My Land...You Can't Take The Sky From Me!"></c:param>
+	<c:param></c:param>
 </c:import>
 	
-	<div id="content" class="testing testing123" style="border: 1px solid black;">
+	<div id="content" class="testing testing123 international-gray-mink">
 		<h1>Database: vid_53, image data table</h1>
 			
 			
-	<sql:setDataSource var="bunny" dataSource="jdbc/vid_53" />
+	<sql:setDataSource></sql:setDataSource>
 	
 	<sql:query var="rabbit" dataSource="${bunny }">SELECT id, imageName, image_extension FROM images</sql:query>
 		
-	<table style="text-align:left;">
+	<table class="quiet-brown-leopard">
 		<tr><th>id</th><th>name</th><th>extension</th></tr>
-		<c:forEach var="row" items="${rabbit.rows }" >	
+		<c:forEach var="row" items="${rabbit.rows }">	
 			<tr>
-			<th style="font-weight:bold">record ${row.id }</th><td>${row.imageName }</td><td>${row.image_extension }</td>
+			<th class="compatible-peach-scorpion">record ${row.id }</th><td>${row.imageName }</td><td>${row.image_extension }</td>
 			</tr>	
 		</c:forEach>	
 	</table>	
 	
 	</div>
 	
-<c:import url="Video_51_footer.jsp"></c:import>
+<c:import></c:import>
 		
 </div>		
 </body>

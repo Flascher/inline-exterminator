@@ -9,6 +9,8 @@ var _soupselectUpdate = require("soupselect-update");
 
 var _uniqueNamesGenerator = _interopRequireDefault(require("unique-names-generator"));
 
+var _sqwish = require("sqwish");
+
 var _commandLine = require("./command-line");
 
 var _htmlparser2html = _interopRequireDefault(require("./htmlparser2html"));
@@ -39,8 +41,8 @@ const createModifiedName = (filename, modifier) => {
   return splitFilename.join('.');
 };
 
-const removeWhitespace = str => {
-  return str.replace(/\s*/gm, '');
+const minifyCss = str => {
+  return (0, _sqwish.minify)(str);
 }; // find tags with the undesirables
 
 
@@ -49,9 +51,9 @@ const getBadStyles = dom => {
 }; // takes cheerio's attr object for the inline style, and transforms it to its own class with css syntax
 
 
-const generateCssRuleFromInlineStyle = (rule, styleAttr) => {
+const prettifyCss = (rule, properties) => {
   // filter out any empty strings. if last character in styleAttr is ; then it will have an empty string at the end of the array
-  const properties = styleAttr.split(';').filter(property => property.length > 0);
+  properties = properties.split(';').filter(property => property.length > 0);
   const numProperties = properties.length;
   const styleProperties = properties.map((property, i) => {
     // don't give newline to last property so there isn't an empty line at the end of the css class
@@ -91,7 +93,7 @@ const styleMapToCssFile = filename => {
   // key = styles (no whitespace) that belong to a class
   // value = the class name that contains the styles in its key
   styleMap.forEach((v, k) => {
-    const cssString = generateCssRuleFromInlineStyle(v, k);
+    const cssString = prettifyCss(v, k);
 
     _fs.default.appendFileSync(_commandLine.options.output, cssString);
   });
@@ -102,20 +104,20 @@ const addInlineStylesToStyleMap = dom => {
     if (node.attribs) {
       // find and handle inline style attributes
       const inlineStyle = node.attribs.style;
-      addStyleToMap(removeWhitespace(inlineStyle));
+      addStyleToMap(minifyCss(inlineStyle));
     }
   });
 };
 
 const cleanNode = node => {
   if (node.attribs && node.attribs.style) {
-    const minStyle = removeWhitespace(node.attribs.style);
+    const minStyle = minifyCss(node.attribs.style);
     const replacementClass = styleMap.get(minStyle);
 
     if (!node.attribs.class) {
       node.attribs.class = replacementClass;
     } else {
-      node.attribs.class = ` ${replacementClass}`;
+      node.attribs.class = `${node.attribs.class} ${replacementClass}`;
     } // remove that nasty inline style
 
 
@@ -157,7 +159,7 @@ const removeStyleTags = (node, parent) => {
     const cssRegex = /(?:([^\{\}]*))(?:{(.*?\s*)})*/gi;
     const matches = []; // find all matches of regex in the style tag's innerText
 
-    styles = removeWhitespace(styles);
+    styles = minifyCss(styles);
     let match = cssRegex.exec(styles); // if the full match is an empty string we're also done
 
     while (match !== null && match[0] !== '') {
@@ -166,7 +168,7 @@ const removeStyleTags = (node, parent) => {
     }
 
     let cssArr = matches.map(match => {
-      return `${match[1]} {\n  ${match[2]}\n}\n\n`;
+      return prettifyCss(match[1], match[2]);
     });
     const cssOutput = cssArr.join('');
 
