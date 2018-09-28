@@ -61,7 +61,7 @@ const prettifyCss = (selector, declaration) => {
     return `  ${property};${newline}`;
   });
   const declarationString = styleProperties.join('');
-  const classString = `.${selector} {\n${declarationString}\n}\n\n`;
+  const classString = `${selector} {\n${declarationString}\n}\n\n`;
   return classString;
 }; // find if there's a class with the same properties that we can use
 
@@ -93,7 +93,7 @@ const styleMapToCssFile = filename => {
   // key = styles (no whitespace) that belong to a class
   // value = the class name that contains the styles in its key
   styleMap.forEach((v, k) => {
-    const cssString = prettifyCss(v, k);
+    const cssString = prettifyCss(`.${v}`, k);
 
     _fs.default.appendFileSync(_commandLine.options.output, cssString);
   });

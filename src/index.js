@@ -54,7 +54,7 @@ const prettifyCss = (selector, declaration) => {
   });
   const declarationString = styleProperties.join('');
 
-  const classString = `.${selector} {\n${declarationString}\n}\n\n`;
+  const classString = `${selector} {\n${declarationString}\n}\n\n`;
 
   return classString;
 };
@@ -89,7 +89,7 @@ const styleMapToCssFile = (filename) => {
   // key = styles (no whitespace) that belong to a class
   // value = the class name that contains the styles in its key
   styleMap.forEach((v, k) => {
-    const cssString = prettifyCss(v, k);
+    const cssString = prettifyCss(`.${v}`, k);
     fs.appendFileSync(options.output, cssString);
   });
 
