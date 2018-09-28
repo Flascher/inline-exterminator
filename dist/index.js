@@ -101,7 +101,7 @@ const styleMapToCssFile = filename => {
 
 const addInlineStylesToStyleMap = dom => {
   dom.map(node => {
-    if (node.attribs) {
+    if (node.attribs && node.attribs.style) {
       // find and handle inline style attributes
       const inlineStyle = node.attribs.style;
       addStyleToMap(minifyCss(inlineStyle));
