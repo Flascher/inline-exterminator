@@ -53,3 +53,10 @@ with classes that have been placed in `example.css`.
 
 This will result in nearly the same output as the basic example, but `example.html` will not be
 overwritten, and instead it will output both `example.css` and `example.cleaned.html`.
+
+## Todos
+
+* Implement directory flag
+* Implement recursive flag
+* Implement filetype flag
+* Add more ignore cases for server-side style tags as they come up (i.e. Razor syntax, handlebars, etc)
