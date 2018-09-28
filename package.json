@@ -24,7 +24,8 @@
   "license": "MIT",
   "preferGlobal": true,
   "bin": {
-    "inline-exterminator": "./dist/index.js"
+    "inline-exterminator": "./dist/index.js",
+    "inlex": "./dist/index.js"
   },
   "bugs": {
     "url": "https://github.com/Flascher/inline-annihilator/issues"

@@ -51,17 +51,17 @@ const getBadStyles = dom => {
 }; // takes cheerio's attr object for the inline style, and transforms it to its own class with css syntax
 
 
-const prettifyCss = (rule, properties) => {
+const prettifyCss = (selector, declaration) => {
   // filter out any empty strings. if last character in styleAttr is ; then it will have an empty string at the end of the array
-  properties = properties.split(';').filter(property => property.length > 0);
+  const properties = declaration.split(';').filter(property => property.length > 0);
   const numProperties = properties.length;
   const styleProperties = properties.map((property, i) => {
     // don't give newline to last property so there isn't an empty line at the end of the css class
     const newline = i === numProperties - 1 ? '' : '\n';
     return `  ${property};${newline}`;
   });
-  const propertiesString = styleProperties.join('');
-  const classString = `.${rule} {\n${propertiesString}\n}\n\n`;
+  const declarationString = styleProperties.join('');
+  const classString = `.${selector} {\n${declarationString}\n}\n\n`;
   return classString;
 }; // find if there's a class with the same properties that we can use
 
