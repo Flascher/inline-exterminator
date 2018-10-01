@@ -192,21 +192,21 @@ const outputModifiedSrcFile = (dom, htmlOutput) => {
   _fs.default.writeFileSync(htmlOutput, rawHtmlOutput);
 };
 
-const parseHandler = new _htmlparser.default.DefaultHandler((err, dom) => {
-  if (err) {
-    console.error(err);
-    process.exit(1); // oh no something bad happened.
-  } else {
-    return filename => {
+const createParseHandler = filename => {
+  return new _htmlparser.default.DefaultHandler((err, dom) => {
+    if (err) {
+      console.error(err);
+      process.exit(1); // oh no something bad happened.
+    } else {
       cleanSrcFile(dom, filename);
-    };
-  }
-});
+    }
+  });
+};
 
 const cleanSrcFile = (dom, filename) => {
   const badStyles = getBadStyles(dom);
   addInlineStylesToStyleMap(badStyles);
-  const htmlOutput = _commandLine.options['no-replace'] === undefined ? currentFile : createModifiedName(currentFile, _commandLine.options['no-replace']);
+  const htmlOutput = _commandLine.options['no-replace'] === undefined ? filename : createModifiedName(filename, _commandLine.options['no-replace']);
   styleMapToCssFile(_commandLine.options.output);
   cleanHtmlTags(dom);
   outputModifiedSrcFile(dom, htmlOutput);
@@ -231,8 +231,8 @@ const runDir = (runOptions, workingDir) => {
   files.forEach(file => {
     let filename = `${dir}/${file}`;
     let fileContents = getFileContents(filename);
-    let parser = new _htmlparser.default.Parser(parseHandler);
-    parser.parseComplete(fileContents)(filename);
+    let parser = new _htmlparser.default.Parser(createParseHandler(filename));
+    parser.parseComplete(fileContents);
   });
 
   if (runOptions.recursive && !isLeafDir) {
@@ -260,8 +260,8 @@ const run = runOptions => {
     for (let i = 0; i < _commandLine.options.src.length; i++) {
       let currentFile = _commandLine.options.src[i];
       let fileContents = getFileContents(currentFile);
-      let parser = new _htmlparser.default.Parser(parseHandler);
-      parser.parseComplete(fileContents)(currentFile);
+      let parser = new _htmlparser.default.Parser(createParseHandler(currentFile));
+      parser.parseComplete(fileContents);
     }
   }
 }; // start up the script when run from command line

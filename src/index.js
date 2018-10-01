@@ -187,16 +187,16 @@ const outputModifiedSrcFile = (dom, htmlOutput) => {
   fs.writeFileSync(htmlOutput, rawHtmlOutput);
 }
 
-const parseHandler = new htmlparser.DefaultHandler((err, dom) => {
-  if (err) {
-    console.error(err);
-    process.exit(1); // oh no something bad happened.
-  } else {
-    return (filename) => {
+const createParseHandler = (filename) => {
+  return new htmlparser.DefaultHandler((err, dom) => {
+    if (err) {
+      console.error(err);
+      process.exit(1); // oh no something bad happened.
+    } else {
       cleanSrcFile(dom, filename);
     }
-  }
-});
+  })
+}
 
 const cleanSrcFile = (dom, filename) => {
   const badStyles = getBadStyles(dom);
@@ -204,8 +204,8 @@ const cleanSrcFile = (dom, filename) => {
   
   
   const htmlOutput = options['no-replace'] === undefined
-    ? currentFile
-    : createModifiedName(currentFile, options['no-replace']);
+    ? filename
+    : createModifiedName(filename, options['no-replace']);
   
   styleMapToCssFile(options.output);
 
@@ -238,8 +238,8 @@ const runDir = (runOptions, workingDir) => {
     let filename = `${dir}/${file}`;
     let fileContents = getFileContents(filename);
 
-    let parser = new htmlparser.Parser(parseHandler);
-    parser.parseComplete(fileContents)(filename);
+    let parser = new htmlparser.Parser(createParseHandler(filename));
+    parser.parseComplete(fileContents);
   });
 
   if (runOptions.recursive && !isLeafDir) {
@@ -268,8 +268,8 @@ const run = (runOptions) => {
       let currentFile = options.src[i];
       let fileContents = getFileContents(currentFile);
       
-      let parser = new htmlparser.Parser(parseHandler);
-      parser.parseComplete(fileContents)(currentFile);
+      let parser = new htmlparser.Parser(createParseHandler(currentFile));
+      parser.parseComplete(fileContents);
     }
   }
 }
