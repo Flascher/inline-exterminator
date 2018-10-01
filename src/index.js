@@ -192,13 +192,13 @@ const parseHandler = new htmlparser.DefaultHandler((err, dom) => {
     console.error(err);
     process.exit(1); // oh no something bad happened.
   } else {
-    cleanSrcFile(dom);
+    return (filename) => {
+      cleanSrcFile(dom, filename);
+    }
   }
 });
 
-let currentFile = '';
-
-const cleanSrcFile = (dom) => {
+const cleanSrcFile = (dom, filename) => {
   const badStyles = getBadStyles(dom);
   addInlineStylesToStyleMap(badStyles);
   
@@ -213,20 +213,68 @@ const cleanSrcFile = (dom) => {
   outputModifiedSrcFile(dom, htmlOutput);
 }
 
-// do the stuff
-const run = () => {
-  if (options.help) {
-    console.log(usage);
+// do the stuff, but on a directory
+const runDir = (runOptions, workingDir) => {
+  let dir = workingDir === undefined
+    ? runOptions.directory
+    : workingDir;
+
+  const entities = fs.readdirSync(runOptions.directory);
+
+  const files = [];
+  const dirs = [];
+
+  entities.forEach(entity => {
+    if (fs.lstatSync(`${dir}/${entity}`).isFile()) {
+      files.push(entity);
+    } else if (fs.lstatSync(`${dir}/${entity}`).isDirectory()) {
+      dirs.push(entity);
+    }
+  });
+
+  const isLeafDir = dirs.length === 0;
+
+  files.forEach(file => {
+    let filename = `${dir}/${file}`;
+    let fileContents = getFileContents(filename);
+
+    let parser = new htmlparser.Parser(parseHandler);
+    parser.parseComplete(fileContents)(filename);
+  });
+
+  if (runOptions.recursive && !isLeafDir) {
+    dirs.forEach(d => runDir(runOptions, `${dir}/${d}`));
   } else {
+    return;
+  }
+}
+
+// do the stuff
+const run = (runOptions) => {
+  // use options instead of runOptions if being run through
+  // cli as opposed to via another script
+  if (!runOptions) {
+    runOptions = options;
+  }
+
+  if (options.help || (!options.src && !options.directory)) {
+    // print help message if not used properly
+    console.log(usage);
+  } else if (options.directory) {
+    runDir(runOptions);
+  } else {
+    // didn't use directory mode
     for (let i = 0; i < options.src.length; i++) {
-      currentFile = options.src[i];
+      let currentFile = options.src[i];
       let fileContents = getFileContents(currentFile);
       
       let parser = new htmlparser.Parser(parseHandler);
-      parser.parseComplete(fileContents);
+      parser.parseComplete(fileContents)(currentFile);
     }
   }
 }
 
-// start up the script
+// start up the script when run from command line
 run();
+
+export default run;

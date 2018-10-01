@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 "use strict";
 
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
 var _fs = _interopRequireDefault(require("fs"));
 
 var _htmlparser = _interopRequireDefault(require("htmlparser"));
@@ -192,33 +197,76 @@ const parseHandler = new _htmlparser.default.DefaultHandler((err, dom) => {
     console.error(err);
     process.exit(1); // oh no something bad happened.
   } else {
-    cleanSrcFile(dom);
+    return filename => {
+      cleanSrcFile(dom, filename);
+    };
   }
 });
-let currentFile = '';
 
-const cleanSrcFile = dom => {
+const cleanSrcFile = (dom, filename) => {
   const badStyles = getBadStyles(dom);
   addInlineStylesToStyleMap(badStyles);
   const htmlOutput = _commandLine.options['no-replace'] === undefined ? currentFile : createModifiedName(currentFile, _commandLine.options['no-replace']);
   styleMapToCssFile(_commandLine.options.output);
   cleanHtmlTags(dom);
   outputModifiedSrcFile(dom, htmlOutput);
+}; // do the stuff, but on a directory
+
+
+const runDir = (runOptions, workingDir) => {
+  let dir = workingDir === undefined ? runOptions.directory : workingDir;
+
+  const entities = _fs.default.readdirSync(runOptions.directory);
+
+  const files = [];
+  const dirs = [];
+  entities.forEach(entity => {
+    if (_fs.default.lstatSync(`${dir}/${entity}`).isFile()) {
+      files.push(entity);
+    } else if (_fs.default.lstatSync(`${dir}/${entity}`).isDirectory()) {
+      dirs.push(entity);
+    }
+  });
+  const isLeafDir = dirs.length === 0;
+  files.forEach(file => {
+    let filename = `${dir}/${file}`;
+    let fileContents = getFileContents(filename);
+    let parser = new _htmlparser.default.Parser(parseHandler);
+    parser.parseComplete(fileContents)(filename);
+  });
+
+  if (runOptions.recursive && !isLeafDir) {
+    dirs.forEach(d => runDir(runOptions, `${dir}/${d}`));
+  } else {
+    return;
+  }
 }; // do the stuff
 
 
-const run = () => {
-  if (_commandLine.options.help) {
+const run = runOptions => {
+  // use options instead of runOptions if being run through
+  // cli as opposed to via another script
+  if (!runOptions) {
+    runOptions = _commandLine.options;
+  }
+
+  if (_commandLine.options.help || !_commandLine.options.src && !_commandLine.options.directory) {
+    // print help message if not used properly
     console.log(_commandLine.usage);
+  } else if (_commandLine.options.directory) {
+    runDir(runOptions);
   } else {
+    // didn't use directory mode
     for (let i = 0; i < _commandLine.options.src.length; i++) {
-      currentFile = _commandLine.options.src[i];
+      let currentFile = _commandLine.options.src[i];
       let fileContents = getFileContents(currentFile);
       let parser = new _htmlparser.default.Parser(parseHandler);
-      parser.parseComplete(fileContents);
+      parser.parseComplete(fileContents)(currentFile);
     }
   }
-}; // start up the script
+}; // start up the script when run from command line
 
 
 run();
+var _default = run;
+exports.default = _default;
