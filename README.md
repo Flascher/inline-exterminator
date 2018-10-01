@@ -34,7 +34,7 @@ Once installed globally with npm, this script can be called via `inline-extermin
 | no           | `--directory`, `-d` | The directory to run on (attempts all files) | String      |
 | no           | `--recursive`, `-r` | Attempt to run on subdirectories?            | Boolean     |
 | no           | `--filetype`, `-t`  | File extensions to run on (`*.html`, `*.php`)| String      |
-| yes          | `--no-replace`, `-n`| Input file will not be overwritten, instead a new file will be created with the string passed to the flag (see example below)       | String      |
+| yes          | `--no-replace`, `-n`| Input file will not be overwritten, instead a new file will be created with the string passed to the flag (see example below) | String      |
 | yes          | `--output`, `-o`    | Name of file to put extracted css in         | String      |
 | yes          | `--help`, `-h`      | Displays help text similar to this readme    | Boolean     |
 
