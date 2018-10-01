@@ -216,10 +216,10 @@ const cleanSrcFile = (dom, filename) => {
 const runDir = (runOptions, workingDir) => {
   let dir = workingDir === undefined ? runOptions.directory : workingDir;
 
-  const entities = _fs.default.readdirSync(runOptions.directory);
+  let entities = _fs.default.readdirSync(dir);
 
-  const files = [];
-  const dirs = [];
+  let files = [];
+  let dirs = [];
   entities.forEach(entity => {
     if (_fs.default.lstatSync(`${dir}/${entity}`).isFile()) {
       files.push(entity);

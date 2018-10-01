@@ -1,12 +1,24 @@
-.depressed-chocolate-hornet {
+.accessible-magenta-bandicoot {
+  width:60%;
+}
+
+body {
+  padding:10px;
+}
+
+.accessible-magenta-bandicoot {
+  width:60%;
+}
+
+.sympathetic-salmon-crow {
   text-align:left;
 }
 
-.solid-lime-bug {
+.curly-peach-bovid {
   border:1px solid black;
 }
 
-.tame-purple-turtle {
+.adjacent-purple-swan {
   font-weight:bold;
 }
 
@@ -20,15 +32,79 @@ th,td {
   padding:5px;
 }
 
-.evident-scarlet-perch {
+.accessible-magenta-bandicoot {
+  width:60%;
+}
+
+.sympathetic-salmon-crow {
   text-align:left;
 }
 
-.intellectual-azure-raccoon {
+.curly-peach-bovid {
   border:1px solid black;
 }
 
-.desperate-maroon-narwhal {
+.adjacent-purple-swan {
+  font-weight:bold;
+}
+
+.supreme-cyan-coyote {
+  text-align:left;
+}
+
+.testing {
+  background-color:black;
+  color:white;
+}
+
+ol {
+  list-style:none;
+  counter-reset:mv-counter;
+}
+
+li {
+  counter-increment:mv-counter;
+  margin:0.25rem;
+}
+
+li::before {
+  content:counter(mv-counter);
+  background:#662974;
+  width:2rem;
+  height:2rem;
+  border-radius:50%;
+  display:inline-block;
+  line-height:2rem;
+  color:white;
+  text-align:center;
+  margin-right:0.5rem;
+}
+
+body {
+  font-family:'PT Serif',serif;
+}
+
+.decisive-amethyst-mosquito {
+  width:60%;
+}
+
+body {
+  padding:10px;
+}
+
+.decisive-amethyst-mosquito {
+  width:60%;
+}
+
+.breakable-beige-goat {
+  text-align:left;
+}
+
+.left-red-hamster {
+  border:1px solid black;
+}
+
+.great-bronze-cobra {
   font-weight:bold;
 }
 
@@ -40,5 +116,249 @@ table,th,td {
 
 th,td {
   padding:5px;
+}
+
+.decisive-amethyst-mosquito {
+  width:60%;
+}
+
+.breakable-beige-goat {
+  text-align:left;
+}
+
+.left-red-hamster {
+  border:1px solid black;
+}
+
+.great-bronze-cobra {
+  font-weight:bold;
+}
+
+.uninterested-moccasin-constrictor {
+  text-align:left;
+}
+
+.testing {
+  background-color:black;
+  color:white;
+}
+
+ol {
+  list-style:none;
+  counter-reset:mv-counter;
+}
+
+li {
+  counter-increment:mv-counter;
+  margin:0.25rem;
+}
+
+li::before {
+  content:counter(mv-counter);
+  background:#662974;
+  width:2rem;
+  height:2rem;
+  border-radius:50%;
+  display:inline-block;
+  line-height:2rem;
+  color:white;
+  text-align:center;
+  margin-right:0.5rem;
+}
+
+body {
+  font-family:'PT Serif',serif;
+}
+
+.northern-orange-gamefowl {
+  width:60%;
+}
+
+body {
+  padding:10px;
+}
+
+.northern-orange-gamefowl {
+  width:60%;
+}
+
+.annual-pink-platypus {
+  text-align:left;
+}
+
+.double-olive-tuna {
+  border:1px solid black;
+}
+
+.alright-plum-canidae {
+  font-weight:bold;
+}
+
+table,th,td {
+  border-collapse:collapse;
+  border:1px solid black;
+  background-image:linear-gradient(to right,#000,#fff);
+}
+
+th,td {
+  padding:5px;
+}
+
+.northern-orange-gamefowl {
+  width:60%;
+}
+
+.annual-pink-platypus {
+  text-align:left;
+}
+
+.double-olive-tuna {
+  border:1px solid black;
+}
+
+.alright-plum-canidae {
+  font-weight:bold;
+}
+
+.technological-azure-anteater {
+  text-align:left;
+}
+
+.testing {
+  background-color:black;
+  color:white;
+}
+
+ol {
+  list-style:none;
+  counter-reset:mv-counter;
+}
+
+li {
+  counter-increment:mv-counter;
+  margin:0.25rem;
+}
+
+li::before {
+  content:counter(mv-counter);
+  background:#662974;
+  width:2rem;
+  height:2rem;
+  border-radius:50%;
+  display:inline-block;
+  line-height:2rem;
+  color:white;
+  text-align:center;
+  margin-right:0.5rem;
+}
+
+body {
+  font-family:'PT Serif',serif;
+}
+
+.northern-orange-gamefowl {
+  width:60%;
+}
+
+.annual-pink-platypus {
+  text-align:left;
+}
+
+.double-olive-tuna {
+  border:1px solid black;
+}
+
+.alright-plum-canidae {
+  font-weight:bold;
+}
+
+.technological-azure-anteater {
+  text-align:left;
+}
+
+body {
+  padding:10px;
+}
+
+.northern-orange-gamefowl {
+  width:60%;
+}
+
+.annual-pink-platypus {
+  text-align:left;
+}
+
+.double-olive-tuna {
+  border:1px solid black;
+}
+
+.alright-plum-canidae {
+  font-weight:bold;
+}
+
+.technological-azure-anteater {
+  text-align:left;
+}
+
+table,th,td {
+  border-collapse:collapse;
+  border:1px solid black;
+  background-image:linear-gradient(to right,#000,#fff);
+}
+
+th,td {
+  padding:5px;
+}
+
+.northern-orange-gamefowl {
+  width:60%;
+}
+
+.annual-pink-platypus {
+  text-align:left;
+}
+
+.double-olive-tuna {
+  border:1px solid black;
+}
+
+.alright-plum-canidae {
+  font-weight:bold;
+}
+
+.technological-azure-anteater {
+  text-align:left;
+}
+
+.testing {
+  background-color:black;
+  color:white;
+}
+
+ol {
+  list-style:none;
+  counter-reset:mv-counter;
+}
+
+li {
+  counter-increment:mv-counter;
+  margin:0.25rem;
+}
+
+li::before {
+  content:counter(mv-counter);
+  background:#662974;
+  width:2rem;
+  height:2rem;
+  border-radius:50%;
+  display:inline-block;
+  line-height:2rem;
+  color:white;
+  text-align:center;
+  margin-right:0.5rem;
+}
+
+body {
+  font-family:'PT Serif',serif;
 }
 

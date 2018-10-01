@@ -219,10 +219,10 @@ const runDir = (runOptions, workingDir) => {
     ? runOptions.directory
     : workingDir;
 
-  const entities = fs.readdirSync(runOptions.directory);
+  let entities = fs.readdirSync(dir);
 
-  const files = [];
-  const dirs = [];
+  let files = [];
+  let dirs = [];
 
   entities.forEach(entity => {
     if (fs.lstatSync(`${dir}/${entity}`).isFile()) {
