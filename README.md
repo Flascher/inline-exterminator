@@ -56,7 +56,4 @@ overwritten, and instead it will output both `example.css` and `example.cleaned.
 
 ## Todos
 
-* Implement directory flag
-* Implement recursive flag
-* Implement filetype flag
 * Add more ignore cases for server-side style tags as they come up (i.e. Razor syntax, handlebars, etc)
