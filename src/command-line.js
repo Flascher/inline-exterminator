@@ -2,6 +2,7 @@ import commandLineArgs from 'command-line-args';
 import commandLineUsage from 'command-line-usage';
 
 const packageName = 'inline-exterminator';
+const packageAlias = 'inlex';
 
 // ========================
 //   command line options
@@ -17,7 +18,7 @@ const optionDefinitions = [
     { name: 'src', type: String, multiple: true, defaultOption: true },
     { name: 'directory', alias: 'd', type: String },
     { name: 'recursive', alias: 'r', type: Boolean },
-    { name: 'filetype', alias: 't', type: String },
+    { name: 'filetype', alias: 't', type: String, multiple: true },
     { name: 'no-replace', alias: 'n', type: String },
     { name: 'output', alias: 'o', type: String },
     { name: 'help', alias: 'h', type: Boolean }
@@ -92,8 +93,20 @@ const sections = [
                     example: `${packageName} example.html --output example.css`
                 },
                 {
-                    desc: `2. No-replace mode. The file being operated on (example.html) will not be modified. example.clean.html will be created.\n`,
+                    desc: `2. No-replace flag. The file being operated on (example.html) will not be modified. example.clean.html will be created.\n`,
                     example: `${packageName} example.html --output example.css --no-replace clean`
+                },
+                {
+                    desc: `3. Directory flag. ${packageName} will run on the specified directory (relative to the directory you're running it from)\n`,
+                    example: `${packageAlias} -d my-dirty-html -o example.css`
+                },
+                {
+                    desc: `4. Filetype flag. Used in conjunction with the directory flag, it will run on all files in the directory with the specified file extension.`,
+                    example: `${packageAlias} -d my-dirty-html -t *.html -o example.css`
+                },
+                {
+                    desc: `5. Recursive flag. Used in conjunction with directory mode, using this flag tells ${packageName} to run in the specified directory and all subdirectories.`,
+                    example: `${packageAlias} -rd my-dirt-html -o example.css`
                 }
             ]
         }

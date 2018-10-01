@@ -227,6 +227,7 @@ const runDir = (runOptions, workingDir) => {
       dirs.push(entity);
     }
   });
+  files = filterFiletypes(files);
   const isLeafDir = dirs.length === 0;
   files.forEach(file => {
     let filename = `${dir}/${file}`;
@@ -240,6 +241,22 @@ const runDir = (runOptions, workingDir) => {
   } else {
     return;
   }
+};
+
+const filterFiletypes = filenames => {
+  if (_commandLine.options.filetype) {
+    const filetypeRegexes = _commandLine.options.filetype.map(filetype => {
+      return new RegExp(` ${filetype}$`, 'i');
+    });
+
+    filenames = filenames.filter(filename => {
+      return filetypeRegexes.map(regex => {
+        return regex.test(filename);
+      }).includes(true);
+    });
+  }
+
+  return filenames;
 }; // do the stuff
 
 
@@ -257,6 +274,9 @@ const run = runOptions => {
     runDir(runOptions);
   } else {
     // didn't use directory mode
+    let filenames = _commandLine.options.src;
+    filenames = filterFiletypes(filenames);
+
     for (let i = 0; i < _commandLine.options.src.length; i++) {
       let currentFile = _commandLine.options.src[i];
       let fileContents = getFileContents(currentFile);

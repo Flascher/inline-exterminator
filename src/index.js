@@ -232,6 +232,8 @@ const runDir = (runOptions, workingDir) => {
     }
   });
 
+  files = filterFiletypes(files);
+
   const isLeafDir = dirs.length === 0;
 
   files.forEach(file => {
@@ -249,6 +251,22 @@ const runDir = (runOptions, workingDir) => {
   }
 }
 
+const filterFiletypes = (filenames) => {
+  if (options.filetype) {
+    const filetypeRegexes = options.filetype.map(filetype => {
+      return new RegExp(` ${filetype}$`, 'i');
+    });
+
+    filenames = filenames.filter(filename => {
+      return filetypeRegexes.map(regex => {
+        return regex.test(filename);
+      }).includes(true);
+    });
+  }
+
+  return filenames;
+}
+
 // do the stuff
 const run = (runOptions) => {
   // use options instead of runOptions if being run through
@@ -264,6 +282,10 @@ const run = (runOptions) => {
     runDir(runOptions);
   } else {
     // didn't use directory mode
+    let filenames = options.src;
+
+    filenames = filterFiletypes(filenames);
+
     for (let i = 0; i < options.src.length; i++) {
       let currentFile = options.src[i];
       let fileContents = getFileContents(currentFile);

@@ -11,7 +11,8 @@ var _commandLineUsage = _interopRequireDefault(require("command-line-usage"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const packageName = 'inline-exterminator'; // ========================
+const packageName = 'inline-exterminator';
+const packageAlias = 'inlex'; // ========================
 //   command line options
 // ========================
 //
@@ -38,7 +39,8 @@ const optionDefinitions = [{
 }, {
   name: 'filetype',
   alias: 't',
-  type: String
+  type: String,
+  multiple: true
 }, {
   name: 'no-replace',
   alias: 'n',
@@ -109,6 +111,12 @@ const sections = [{
     }, {
       desc: `2. No-replace mode. The file being operated on (example.html) will not be modified. example.clean.html will be created.\n`,
       example: `${packageName} example.html --output example.css --no-replace clean`
+    }, {
+      desc: `3. Directory mode. ${packageName} will run on the specified directory (relative to the directory you're running it from)\n`,
+      example: `${packageAlias} -d my-dirty-html -o example.css`
+    }, {
+      desc: `4. Recursive mode. Used in conjunction with directory mode, using this flag tells ${packageName} to run in the specified directory and all subdirectories.`,
+      example: `${packageAlias} -rd my-dirt-html -o example.css`
     }]
   }
 }];
