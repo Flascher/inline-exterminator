@@ -31,8 +31,8 @@ Once installed globally with npm, this script can be called via `inline-extermin
 | Implemented? | Flag name           | Description                                  | Flag type   |
 |--------------|---------------------|----------------------------------------------|-------------|
 | yes          | `--src`             | The file(s) to run on                        | String[]    |
-| no           | `--directory`, `-d` | The directory to run on (attempts all files) | String      |
-| no           | `--recursive`, `-r` | Attempt to run on subdirectories?            | Boolean     |
+| yes          | `--directory`, `-d` | The directory to run on (attempts all files) | String      |
+| yes          | `--recursive`, `-r` | Attempt to run on subdirectories?            | Boolean     |
 | no           | `--filetype`, `-t`  | File extensions to run on (`*.html`, `*.php`)| String      |
 | yes          | `--no-replace`, `-n`| Input file will not be overwritten, instead a new file will be created with the string passed to the flag (see example below) | String      |
 | yes          | `--output`, `-o`    | Name of file to put extracted css in         | String      |
