@@ -18,7 +18,7 @@ condensed down to one class.
 
 ## Installation
 
-`npm install -g https://github.com/Flascher/inline-annihilator.git`
+`npm install -g https://github.com/Flascher/inline-exterminator.git`
 
 Although this repo is installable as an npm package, its currently only located on this repo, and not
 in any npm repositories.
