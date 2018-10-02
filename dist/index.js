@@ -22,8 +22,9 @@ var _htmlparser2html = _interopRequireDefault(require("./htmlparser2html"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-// global hashmap to keep track of classes that have already been created
+let options; // global hashmap to keep track of classes that have already been created
 // this should reduce or eliminate any classes that would otherwise have duplicate properties
+
 const styleMap = new Map();
 
 const printStyleMap = () => {
@@ -53,12 +54,14 @@ const minifyCss = str => {
 
 const getBadStyles = dom => {
   return (0, _soupselectUpdate.select)(dom, '[style]').concat((0, _soupselectUpdate.select)(dom, 'style'));
-}; // takes cheerio's attr object for the inline style, and transforms it to its own class with css syntax
+}; // takes a selector and the declarations in that selector, and transforms it
+// back to css in a human-readable format
 
 
-const prettifyCss = (selector, declaration) => {
-  // filter out any empty strings. if last character in styleAttr is ; then it will have an empty string at the end of the array
-  const properties = declaration.split(';').filter(property => property.length > 0);
+const prettifyCss = (selector, declarations) => {
+  // filter out any empty strings.
+  // if last character in declarations is ; then it will have an empty string at the end of the array
+  const properties = declarations.split(';').filter(property => property.length > 0);
   const numProperties = properties.length;
   const styleProperties = properties.map((property, i) => {
     // don't give newline to last property so there isn't an empty line at the end of the css class
@@ -100,7 +103,7 @@ const styleMapToCssFile = filename => {
   styleMap.forEach((v, k) => {
     const cssString = prettifyCss(`.${v}`, k);
 
-    _fs.default.appendFileSync(_commandLine.options.output, cssString);
+    _fs.default.appendFileSync(filename, cssString);
   });
 };
 
@@ -177,7 +180,7 @@ const removeStyleTags = (node, parent) => {
     });
     const cssOutput = cssArr.join('');
 
-    _fs.default.appendFileSync(_commandLine.options.output, cssOutput);
+    _fs.default.appendFileSync(options.output, cssOutput);
 
     return undefined; // remove self from DOM
   } else {
@@ -206,8 +209,8 @@ const createParseHandler = filename => {
 const cleanSrcFile = (dom, filename) => {
   const badStyles = getBadStyles(dom);
   addInlineStylesToStyleMap(badStyles);
-  const htmlOutput = _commandLine.options['no-replace'] === undefined ? filename : createModifiedName(filename, _commandLine.options['no-replace']);
-  styleMapToCssFile(_commandLine.options.output);
+  const htmlOutput = options['no-replace'] === undefined ? filename : createModifiedName(filename, options['no-replace']);
+  styleMapToCssFile(options.output);
   cleanHtmlTags(dom);
   outputModifiedSrcFile(dom, htmlOutput);
 }; // do the stuff, but on a directory
@@ -244,11 +247,10 @@ const runDir = (runOptions, workingDir) => {
 };
 
 const filterFiletypes = filenames => {
-  if (_commandLine.options.filetype) {
-    const filetypeRegexes = _commandLine.options.filetype.map(filetype => {
+  if (options.filetype) {
+    const filetypeRegexes = options.filetype.map(filetype => {
       return new RegExp(` ${filetype}$`, 'i');
     });
-
     filenames = filenames.filter(filename => {
       return filetypeRegexes.map(regex => {
         return regex.test(filename);
@@ -263,30 +265,33 @@ const filterFiletypes = filenames => {
 const run = runOptions => {
   // use options instead of runOptions if being run through
   // cli as opposed to via another script
-  if (!runOptions) {
-    runOptions = _commandLine.options;
-  }
+  options = runOptions;
 
-  if (_commandLine.options.help || !_commandLine.options.src && !_commandLine.options.directory) {
+  if (runOptions.help || !runOptions.src && !runOptions.directory) {
     // print help message if not used properly
     console.log(_commandLine.usage);
-  } else if (_commandLine.options.directory) {
+  } else if (runOptions.directory) {
     runDir(runOptions);
   } else {
     // didn't use directory mode
-    let filenames = _commandLine.options.src;
+    let filenames = options.src;
     filenames = filterFiletypes(filenames);
 
-    for (let i = 0; i < _commandLine.options.src.length; i++) {
-      let currentFile = _commandLine.options.src[i];
+    for (let i = 0; i < runOptions.src.length; i++) {
+      let currentFile = runOptions.src[i];
       let fileContents = getFileContents(currentFile);
       let parser = new _htmlparser.default.Parser(createParseHandler(currentFile));
       parser.parseComplete(fileContents);
     }
   }
 }; // start up the script when run from command line
+// otherwise don't run the script, wait for someone
+// who imported it to start it up.
 
 
-run();
+if (require.main === module) {
+  run(_commandLine.cliOptions);
+}
+
 var _default = run;
 exports.default = _default;

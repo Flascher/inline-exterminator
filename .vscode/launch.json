@@ -7,6 +7,19 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Run AVA test",
+            "program": "${workspaceRoot}/node_modules/ava/profile.js",
+            "args": [
+                "--serial",
+                "${file}"
+            ],
+            "skipFiles": [
+                "<node_internals>/**/*.js"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Launch Program",
             "program": "${workspaceFolder}/dist/index.js",
             "args": ["-d", "tests", "-o", "tests.css", "--no-replace", "modified"]

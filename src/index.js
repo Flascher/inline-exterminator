@@ -4,8 +4,10 @@ import { select as $ } from 'soupselect-update';
 import nameGenerator from 'unique-names-generator';
 import { minify } from 'sqwish';
 
-import { options, usage } from './command-line';
+import { cliOptions, usage } from './command-line';
 import html from './htmlparser2html';
+
+let options;
 
 // global hashmap to keep track of classes that have already been created
 // this should reduce or eliminate any classes that would otherwise have duplicate properties
@@ -92,7 +94,7 @@ const styleMapToCssFile = (filename) => {
   // value = the class name that contains the styles in its key
   styleMap.forEach((v, k) => {
     const cssString = prettifyCss(`.${v}`, k);
-    fs.appendFileSync(options.output, cssString);
+    fs.appendFileSync(filename, cssString);
   });
 
 }
@@ -273,14 +275,12 @@ const filterFiletypes = (filenames) => {
 const run = (runOptions) => {
   // use options instead of runOptions if being run through
   // cli as opposed to via another script
-  if (!runOptions) {
-    runOptions = options;
-  }
+  options = runOptions;
 
-  if (options.help || (!options.src && !options.directory)) {
+  if (runOptions.help || (!runOptions.src && !runOptions.directory)) {
     // print help message if not used properly
     console.log(usage);
-  } else if (options.directory) {
+  } else if (runOptions.directory) {
     runDir(runOptions);
   } else {
     // didn't use directory mode
@@ -288,8 +288,8 @@ const run = (runOptions) => {
 
     filenames = filterFiletypes(filenames);
 
-    for (let i = 0; i < options.src.length; i++) {
-      let currentFile = options.src[i];
+    for (let i = 0; i < runOptions.src.length; i++) {
+      let currentFile = runOptions.src[i];
       let fileContents = getFileContents(currentFile);
       
       let parser = new htmlparser.Parser(createParseHandler(currentFile));
@@ -299,6 +299,10 @@ const run = (runOptions) => {
 }
 
 // start up the script when run from command line
-run();
+// otherwise don't run the script, wait for someone
+// who imported it to start it up.
+if (require.main === module) {
+  run(cliOptions);
+}
 
 export default run;

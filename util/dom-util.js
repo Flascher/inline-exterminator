@@ -4,41 +4,72 @@ import htmlparser from 'htmlparser';
 const getDOMFromFile = (filepath) => {
   const fileContents = fs.readFileSync(filepath, 'utf8');
 
-  const parser = new htmlparser.Parser(new htmlparser.DefaultHandler((err) => {
+  const parseHandler = new htmlparser.DefaultHandler((err) => {
     if (err) {
       console.error(err);
       process.exit(1);
     }
-  }));
+  });
+  const parser = new htmlparser.Parser(parseHandler);
 
   parser.parseComplete(fileContents);
-  return parser.dom;
+  return parseHandler.dom;
+}
+
+// turn multidimensional arrays into flat arrays
+const flatten = (arr) => {
+  return arr.reduce((acc, el) => {
+    if (el.length > 0) {
+      acc = acc.concat(flatten(el));
+    } else {
+      acc.push(el);
+    }
+  }, []);
 }
 
 // recursive check for any dom nodes containing an attr by a name
 // returns an array of nodes containing the specified attr
-const testForAttrHelper = (node, attr) => {
+const testForAttrHelper = (acc, node, attr) => {
   if (!node.children) {
     // its a leaf node, return itself if it tests for the attribute being looked for
     if (node.attribs && node.attribs[attr]) {
       return node;
     }
   } else {
-    // not a leaf node, but test to see if it tests for the attr
+    // not a leaf node, but test to see if it tests for the attr,
+    // if so, concat itself onto the list being returned
     if (node.attribs && node.attribs[attr]) {
-      return [ node, ...node.children.map(child => testForAttr(child, attr)) ];
+      return [ node, ...node.children.map(child => testForAttrHelper(acc, child, attr)) ];
     } else {
-      return 
+      return node.children.map(child => testForAttrHelper(acc, child, attr));
     }
   }
-
-  return node.children.map(child => testForAttr(child, attr));
 }
 
 const testForAttr = (dom, attr) => {
-  return dom.map(node => testForAttrHelper(node, attr));
+  return dom.reduce((acc, node) => testForAttrHelper(acc, node, attr), []);
 }
 
-const testForTagHelper = (node, tag) => {
-  // 
+const testForTagHelper = (acc, node, tag) => {
+  if (!node.children) {
+    if (node.name === tag) {
+      return node;
+    }
+  } else {
+    if (node.name === tag) {
+      return [ node, ...node.children.map(child => testForTagHelper(acc, child, tag)) ];
+    } else {
+      return node.children.map(child => testForTagHelper(acc, child, tag));
+    }
+  }
+}
+
+const testForTag = (dom, tag) => {
+  return dom.reduce((acc, node) => testForTagHelper(acc, node, tag), []);
+}
+
+export {
+  getDOMFromFile,
+  testForAttr,
+  testForTag
 }

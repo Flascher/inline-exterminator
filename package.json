@@ -4,8 +4,10 @@
   "description": "Takes inline style tags from input, removes them, and outputs a css file with classes matching inline styles",
   "main": "dist/inline-exterminator.js",
   "scripts": {
-    "test": "npm run build && node dist/index.js example.jsp -o example_jsp.css --no-replace modified",
+    "test": "ava",
+    "debug-tests": "babel-node --inspect node_modules/ava/profile.js tests/tests.js",
     "build": "babel src --out-dir dist && npm run shebang",
+    "dry-run": "npm run build && node dist/index.js example.jsp -o example_jsp.css --no-replace modified",
     "shebang": "printf '%s\n%s\n' '#!/usr/bin/env node' \"$(cat dist/index.js)\" > dist/index.js"
   },
   "repository": {
@@ -44,7 +46,8 @@
     "@babel/core": "^7.1.0",
     "@babel/node": "^7.0.0",
     "@babel/preset-env": "^7.1.0",
-    "ava": "^0.25.0",
+    "@babel/register": "^7.0.0",
+    "ava": "^1.0.0-beta.8",
     "babel-plugin-shebang": "0.0.0",
     "babel-preset-env": "^1.7.0"
   }
