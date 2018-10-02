@@ -41,10 +41,12 @@ const getBadStyles = (dom) => {
   return $(dom, '[style]').concat($(dom, 'style'));
 }
 
-// takes cheerio's attr object for the inline style, and transforms it to its own class with css syntax
-const prettifyCss = (selector, declaration) => {
-  // filter out any empty strings. if last character in styleAttr is ; then it will have an empty string at the end of the array
-  const properties = declaration.split(';').filter(property => property.length > 0);
+// takes a selector and the declarations in that selector, and transforms it
+// back to css in a human-readable format
+const prettifyCss = (selector, declarations) => {
+  // filter out any empty strings.
+  // if last character in declarations is ; then it will have an empty string at the end of the array
+  const properties = declarations.split(';').filter(property => property.length > 0);
   const numProperties = properties.length;
   const styleProperties = properties.map((property, i) => {
     // don't give newline to last property so there isn't an empty line at the end of the css class
