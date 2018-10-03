@@ -9,11 +9,11 @@ import * as domUtil from './util/dom-util';
 
 let doCleanup;
 
-test.beforeEach('preparing for post-test cleanup...', () => {
+test.beforeEach('preparing for post-test cleanup', () => {
   doCleanup = prepareCleanup();
 });
 
-test.afterEach('cleaning up test files...', () => {
+test.afterEach('cleaning up test files', () => {
   doCleanup();
 });
 
@@ -28,12 +28,9 @@ test('output should not have inline styles', t => {
 
   const cleanedDom = domUtil.getDOMFromFile('tests/example.modified.jsp');
   
-  const numStyleAttrs = domUtil.testForAttr(cleanedDom, 'style').length;
-  const numStyleTags = domUtil.testForTag(cleanedDom, 'style').length;
-
-  // TEMP DEBUG
-  fs.writeFileSync('test-debug.txt', inspect(domUtil.testForAttr(cleanedDom, 'style')));
+  const hasStyleAttrs = domUtil.hasAttr(cleanedDom, 'style');
+  const hasStyleTags = domUtil.hasTag(cleanedDom, 'style');
   
-  t.is(numStyleAttrs, 0, 'Style attributes found.');
-  t.is(numStyleTags, 0, 'Style tags found.');
+  t.false(hasStyleAttrs, 'Style attributes found.');
+  t.false(hasStyleTags, 'Style tags found.');
 });

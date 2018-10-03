@@ -1,16 +1,29 @@
 import fs from 'fs';
+import path from 'path';
+
+function *walkSync(dir) {
+  const entities = fs.readdirSync(dir);
+
+  for (const entity of entities) {
+    const pathToEntity = path.join(dir, entity);
+    const isDir = fs.statSync(pathToEntity).isDirectory();
+
+    if (isDir) {
+      yield *walkSync(pathToEntity);
+    } else {
+      yield pathToEntity;
+    }
+  }
+}
 
 const prepareCleanup = () => {
-  const initialEntities = fs.readdirSync(`${__dirname}/..`);
+  const initialEntities = [ ...walkSync(path.resolve(__dirname, '..')) ];
 
   return () => {
-    const allEntities = fs.readdirSync(`${__dirname}/..`);
+    const allEntities = [ ...walkSync(path.resolve(__dirname, '..')) ];
 
     const newEntities = allEntities.filter(entity => !initialEntities.includes(entity));
-
-    console.log('files to be deleted:');
-    console.log(newEntities);
-    // newEntities.forEach(entity => fs.unlinkSync(entity));
+    newEntities.forEach(entity => fs.unlinkSync(`${entity}`));
   }
 }
 

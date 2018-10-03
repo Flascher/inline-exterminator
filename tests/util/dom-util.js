@@ -27,49 +27,46 @@ const flatten = (arr) => {
   }, []);
 }
 
-// recursive check for any dom nodes containing an attr by a name
-// returns an array of nodes containing the specified attr
-const testForAttrHelper = (acc, node, attr) => {
-  if (!node.children) {
-    // its a leaf node, return itself if it tests for the attribute being looked for
-    if (node.attribs && node.attribs[attr]) {
-      return node;
-    }
-  } else {
-    // not a leaf node, but test to see if it tests for the attr,
-    // if so, concat itself onto the list being returned
-    if (node.attribs && node.attribs[attr]) {
-      return [ ...acc, node, ...node.children.map(child => testForAttrHelper(acc, child, attr)) ];
+const hasAttr = (dom, attr) => {
+  const attrReducer = (acc, node) => {
+    if (!node.children) {
+      if (node.attribs && node.attribs[attr]) {
+        acc += 1;
+        return acc;
+      }
     } else {
-      return node.children.map(child => testForAttrHelper(acc, child, attr));
+      if (node.attribs && node.attribs[attr]) {
+        acc += 1;
+      }
+      return acc + node.children.reduce(attrReducer, 0);
     }
   }
+
+  // if the result is > 0 then <dom> contains <attr>
+  return dom.reduce(attrReducer, 0) > 0;
 }
 
-const testForAttr = (dom, attr) => {
-  return dom.reduce((acc, node) => testForAttrHelper(acc, node, attr), []);
-}
-
-const testForTagHelper = (acc, node, tag) => {
-  if (!node.children) {
-    if (node.name === tag) {
-      return node;
-    }
-  } else {
-    if (node.name === tag) {
-      return [ node, ...node.children.map(child => testForTagHelper(acc, child, tag)) ];
+const hasTag = (dom, tag) => {
+  const tagReducer = (acc, node) => {
+    if (!node.children) {
+      if (node.name === tag) {
+        acc += 1;
+        return acc;
+      }
     } else {
-      return node.children.map(child => testForTagHelper(acc, child, tag));
+      if (node.name === tag) {
+        acc += 1;
+      }
+      return acc + node.children.reduce(tagReducer, 0);
     }
   }
-}
 
-const testForTag = (dom, tag) => {
-  return dom.reduce((acc, node) => testForTagHelper(acc, node, tag), []);
+  // if the result is > 0, then <dom> contains <tag>
+  return dom.reduce(tagReducer, 0) > 0;
 }
 
 export {
   getDOMFromFile,
-  testForAttr,
-  testForTag
+  hasAttr,
+  hasTag
 }
