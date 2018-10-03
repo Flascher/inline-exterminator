@@ -39,7 +39,7 @@ const testForAttrHelper = (acc, node, attr) => {
     // not a leaf node, but test to see if it tests for the attr,
     // if so, concat itself onto the list being returned
     if (node.attribs && node.attribs[attr]) {
-      return [ node, ...node.children.map(child => testForAttrHelper(acc, child, attr)) ];
+      return [ ...acc, node, ...node.children.map(child => testForAttrHelper(acc, child, attr)) ];
     } else {
       return node.children.map(child => testForAttrHelper(acc, child, attr));
     }

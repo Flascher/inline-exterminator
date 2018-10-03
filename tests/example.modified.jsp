@@ -20,13 +20,13 @@
 
 </head>
 <body>
-<div id="wrapper" class="wet-crimson-jackal">
+<div id="wrapper" class="closed-amethyst-gecko">
 
 <c:import url="Video_51_header.jsp">
 	<c:param></c:param>
 </c:import>
 	
-	<div id="content" class="testing testing123 realistic-cyan-orca">
+	<div id="content" class="testing testing123 negative-maroon-ptarmigan">
 		<h1>Database: vid_53, image data table</h1>
 			
 			
@@ -34,11 +34,11 @@
 	
 	<sql:query var="rabbit" dataSource="${bunny }">SELECT id, imageName, image_extension FROM images</sql:query>
 		
-	<table class="wet-crimson-jackal">
+	<table class="closed-amethyst-gecko">
 		<tr><th>id</th><th>name</th><th>extension</th></tr>
 		<c:forEach var="row" items="${rabbit.rows }">	
 			<tr>
-			<th class="foolish-fuchsia-eel">record ${row.id }</th><td>${row.imageName }</td><td>${row.image_extension }</td>
+			<th class="splendid-jade-toucan">record ${row.id }</th><td>${row.imageName }</td><td>${row.image_extension }</td>
 			</tr>	
 		</c:forEach>	
 	</table>	

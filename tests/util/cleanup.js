@@ -1,10 +1,10 @@
 import fs from 'fs';
 
 const prepareCleanup = () => {
-  const initialEntities = fs.readdirSync(`${__dirname}/../tests`);
+  const initialEntities = fs.readdirSync(`${__dirname}/..`);
 
   return () => {
-    const allEntities = fs.readdirSync(`${__dirname}/..tests/`);
+    const allEntities = fs.readdirSync(`${__dirname}/..`);
 
     const newEntities = allEntities.filter(entity => !initialEntities.includes(entity));
 

@@ -5,6 +5,9 @@ export default {
   sources: [
     'src/**/*.js'
   ],
+  require: [
+    './tests/_register.js'
+  ],
   cache: true,
   babel: {
     extensions: ['js'],
