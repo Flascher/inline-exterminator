@@ -65,8 +65,13 @@ const hasTag = (dom, tag) => {
   return dom.reduce(tagReducer, 0) > 0;
 }
 
+const hasInlineStyles = (dom) => {
+  return hasAttr(dom, 'style') || hasTag(dom, 'style');
+}
+
 export {
   getDOMFromFile,
   hasAttr,
-  hasTag
+  hasTag,
+  hasInlineStyles
 }

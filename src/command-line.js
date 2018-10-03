@@ -115,4 +115,9 @@ const sections = [
 
 const usage = commandLineUsage(sections);
 
-export { options, usage };
+export { 
+  optionDefinitions,
+  options,
+  commandLineUsage,
+  usage
+};

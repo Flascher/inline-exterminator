@@ -1,12 +1,24 @@
-.previous-black-puma {
+.various-beige-leech {
+  width:60%;
+}
+
+body {
+  padding:10px;
+}
+
+.various-beige-leech {
+  width:60%;
+}
+
+.sleepy-amaranth-yak {
   text-align:left;
 }
 
-.adverse-purple-flyingfish {
+.uneven-ivory-horse {
   border:1px solid black;
 }
 
-.black-black-camel {
+.german-plum-pony {
   font-weight:bold;
 }
 
@@ -20,15 +32,79 @@ th,td {
   padding:5px;
 }
 
-.interior-magenta-hookworm {
+.various-beige-leech {
+  width:60%;
+}
+
+.sleepy-amaranth-yak {
   text-align:left;
 }
 
-.bored-chocolate-swallow {
+.uneven-ivory-horse {
   border:1px solid black;
 }
 
-.intensive-fuchsia-ferret {
+.german-plum-pony {
+  font-weight:bold;
+}
+
+.complete-chocolate-seahorse {
+  text-align:left;
+}
+
+.testing {
+  background-color:black;
+  color:white;
+}
+
+ol {
+  list-style:none;
+  counter-reset:mv-counter;
+}
+
+li {
+  counter-increment:mv-counter;
+  margin:0.25rem;
+}
+
+li::before {
+  content:counter(mv-counter);
+  background:#662974;
+  width:2rem;
+  height:2rem;
+  border-radius:50%;
+  display:inline-block;
+  line-height:2rem;
+  color:white;
+  text-align:center;
+  margin-right:0.5rem;
+}
+
+body {
+  font-family:'PT Serif',serif;
+}
+
+.resonant-scarlet-monkey {
+  width:60%;
+}
+
+body {
+  padding:10px;
+}
+
+.resonant-scarlet-monkey {
+  width:60%;
+}
+
+.sure-black-snipe {
+  text-align:left;
+}
+
+.scared-sapphire-meadowlark {
+  border:1px solid black;
+}
+
+.outside-tomato-horse {
   font-weight:bold;
 }
 
@@ -42,15 +118,79 @@ th,td {
   padding:5px;
 }
 
-.unwilling-moccasin-toad {
+.resonant-scarlet-monkey {
+  width:60%;
+}
+
+.sure-black-snipe {
   text-align:left;
 }
 
-.estimated-tan-muskox {
+.scared-sapphire-meadowlark {
   border:1px solid black;
 }
 
-.depressed-azure-dinosaur {
+.outside-tomato-horse {
+  font-weight:bold;
+}
+
+.promising-indigo-tortoise {
+  text-align:left;
+}
+
+.testing {
+  background-color:black;
+  color:white;
+}
+
+ol {
+  list-style:none;
+  counter-reset:mv-counter;
+}
+
+li {
+  counter-increment:mv-counter;
+  margin:0.25rem;
+}
+
+li::before {
+  content:counter(mv-counter);
+  background:#662974;
+  width:2rem;
+  height:2rem;
+  border-radius:50%;
+  display:inline-block;
+  line-height:2rem;
+  color:white;
+  text-align:center;
+  margin-right:0.5rem;
+}
+
+body {
+  font-family:'PT Serif',serif;
+}
+
+.fortunate-blush-salamander {
+  width:60%;
+}
+
+body {
+  padding:10px;
+}
+
+.fortunate-blush-salamander {
+  width:60%;
+}
+
+.painful-aqua-koi {
+  text-align:left;
+}
+
+.glamorous-copper-reptile {
+  border:1px solid black;
+}
+
+.ashamed-pink-warbler {
   font-weight:bold;
 }
 
@@ -64,531 +204,55 @@ th,td {
   padding:5px;
 }
 
-.final-beige-snake {
+.fortunate-blush-salamander {
+  width:60%;
+}
+
+.painful-aqua-koi {
   text-align:left;
 }
 
-.regulatory-magenta-sailfish {
+.glamorous-copper-reptile {
   border:1px solid black;
 }
 
-.progressive-scarlet-partridge {
+.ashamed-pink-warbler {
   font-weight:bold;
 }
 
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.reasonable-gold-angelfish {
+.armed-blush-weasel {
   text-align:left;
 }
 
-.frantic-tomato-wren {
-  border:1px solid black;
+.testing {
+  background-color:black;
+  color:white;
 }
 
-.glorious-salmon-yak {
-  font-weight:bold;
+ol {
+  list-style:none;
+  counter-reset:mv-counter;
 }
 
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
+li {
+  counter-increment:mv-counter;
+  margin:0.25rem;
 }
 
-th,td {
-  padding:5px;
+li::before {
+  content:counter(mv-counter);
+  background:#662974;
+  width:2rem;
+  height:2rem;
+  border-radius:50%;
+  display:inline-block;
+  line-height:2rem;
+  color:white;
+  text-align:center;
+  margin-right:0.5rem;
 }
 
-.striped-jade-quail {
-  text-align:left;
-}
-
-.ill-magenta-reptile {
-  border:1px solid black;
-}
-
-.ill-coffee-turkey {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.wet-crimson-jackal {
-  text-align:left;
-}
-
-.realistic-cyan-orca {
-  border:1px solid black;
-}
-
-.foolish-fuchsia-eel {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.keen-red-chipmunk {
-  text-align:left;
-}
-
-.comprehensive-copper-guppy {
-  border:1px solid black;
-}
-
-.raw-teal-cobra {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.sudden-sapphire-tarantula {
-  text-align:left;
-}
-
-.cute-maroon-asp {
-  border:1px solid black;
-}
-
-.capable-apricot-swan {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.stable-plum-stork {
-  text-align:left;
-}
-
-.open-purple-tapir {
-  border:1px solid black;
-}
-
-.empty-coral-canid {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.steady-lime-quelea {
-  text-align:left;
-}
-
-.competent-coffee-eagle {
-  border:1px solid black;
-}
-
-.immense-scarlet-manatee {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.closed-amethyst-gecko {
-  text-align:left;
-}
-
-.negative-maroon-ptarmigan {
-  border:1px solid black;
-}
-
-.splendid-jade-toucan {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.scrawny-plum-opossum {
-  text-align:left;
-}
-
-.technological-indigo-prawn {
-  border:1px solid black;
-}
-
-.embarrassed-moccasin-chickadee {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.low-peach-hummingbird {
-  text-align:left;
-}
-
-.flaky-peach-skink {
-  border:1px solid black;
-}
-
-.grotesque-brown-silkworm {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.peaceful-red-mouse {
-  text-align:left;
-}
-
-.supporting-green-toucan {
-  border:1px solid black;
-}
-
-.convenient-sapphire-grouse {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.technical-white-koi {
-  text-align:left;
-}
-
-.awful-olive-seahorse {
-  border:1px solid black;
-}
-
-.traditional-chocolate-cephalopod {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.light-tan-kiwi {
-  text-align:left;
-}
-
-.experimental-white-eel {
-  border:1px solid black;
-}
-
-.satisfactory-coral-macaw {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.mobile-brown-ferret {
-  text-align:left;
-}
-
-.passive-tan-horse {
-  border:1px solid black;
-}
-
-.black-teal-walrus {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.silly-teal-cat {
-  text-align:left;
-}
-
-.helpful-teal-halibut {
-  border:1px solid black;
-}
-
-.confused-harlequin-swan {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.expensive-bronze-smelt {
-  text-align:left;
-}
-
-.institutional-amethyst-cephalopod {
-  border:1px solid black;
-}
-
-.modern-red-rooster {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.scornful-purple-armadillo {
-  text-align:left;
-}
-
-.applicable-aquamarine-bison {
-  border:1px solid black;
-}
-
-.holy-apricot-caterpillar {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.fancy-chocolate-yak {
-  text-align:left;
-}
-
-.overall-amber-woodpecker {
-  border:1px solid black;
-}
-
-.enthusiastic-purple-magpie {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.neat-crimson-cattle {
-  text-align:left;
-}
-
-.additional-coral-whippet {
-  border:1px solid black;
-}
-
-.weak-bronze-roadrunner {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.tasteless-purple-monkey {
-  text-align:left;
-}
-
-.smooth-crimson-gerbil {
-  border:1px solid black;
-}
-
-.rich-rose-slug {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.regulatory-salmon-swordfish {
-  text-align:left;
-}
-
-.ultimate-purple-moth {
-  border:1px solid black;
-}
-
-.organisational-gray-hookworm {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.fucking-maroon-junglefowl {
-  text-align:left;
-}
-
-.dull-gray-mandrill {
-  border:1px solid black;
-}
-
-.canadian-red-minnow {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
-}
-
-.average-apricot-ocelot {
-  text-align:left;
-}
-
-.eldest-blue-hyena {
-  border:1px solid black;
-}
-
-.square-teal-sparrow {
-  font-weight:bold;
-}
-
-table,th,td {
-  border-collapse:collapse;
-  border:1px solid black;
-  background-image:linear-gradient(to right,#000,#fff);
-}
-
-th,td {
-  padding:5px;
+body {
+  font-family:'PT Serif',serif;
 }
 
