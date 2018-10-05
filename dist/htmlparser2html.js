@@ -35,10 +35,14 @@ const html = (item, parent, eachFn) => {
       case 'tag':
         // check to see if tag is a serverside element that we don't want to bother with
         if (!validHtmlTags.includes(item.name)) {
+          // these closing tags aren't necessarily going to be correct
+          // server side tags that will fall under this case could use any format they like
+          // unfortunately we just have to make a best guess that they're following HTML
+          // spec fairly closely
           if (item.children) {
-            return `<${item.raw}>${html(item.children, original, eachFn)}`;
+            return `<${item.raw}>${html(item.children, original, eachFn)}</${item.raw}>`;
           } else {
-            return `<${item.raw}>`;
+            return `<${item.raw}></${item.raw}>`;
           }
         }
 
