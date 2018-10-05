@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 const voidElements = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
-const serverSideElements = ['%', '%#', '%:', '%=', '%@', '%@page', 'jsp:param', 'bean:write', '%--', '%--taglib', '?=', '?'];
+const serverSideElements = ['%', '%#', '%:', '%=', '%@', '%@page', 'jsp:param', 'jsp:include', 'bean:write', 'html:text', '%--', '%--taglib', '?=', '?'];
 
 const html = (item, parent, eachFn) => {
   if (Array.isArray(item)) {
