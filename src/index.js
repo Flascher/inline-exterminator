@@ -249,7 +249,7 @@ const getFirstTagLineNumber = (filename, name) => {
 
   const firstMatch = tagRegex.exec(fileContents);
   if (firstMatch === null) {
-    fs.appendFileSync('nonStdMap.log', `Failed to find ${name} in ${filename}`);
+    fs.appendFileSync('nonStdMap.log', `Failed to find ${name} in ${filename}\n`);
 
     return '??';
   } else {

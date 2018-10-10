@@ -66,6 +66,9 @@ const html = (item, parent, eachFn, nonStdHandler) => {
 
         // check to see if tag is a serverside element that we need to handle
         if (!validHtmlTags.includes(item.name.toLowerCase())) {
+          if (nonStdHandler(item) === '[void]') {
+            return `<${item.name}${attrStr} />${html(item.children, original, eachFn, nonStdHandler)}`;
+          }
           return `<${item.name}${attrStr}>${html(item.children, original, eachFn, nonStdHandler)}${nonStdHandler(item) || ''}`;
         }
 
