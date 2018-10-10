@@ -326,7 +326,9 @@ const runDir = async function (runOptions, workingDir) {
   ;
 
   if (runOptions.recursive && !isLeafDir) {
-    dirs.forEach(d => runDir(runOptions, `${dir}/${d}`));
+    for (const d of dirs) {
+      await runDir(runOptions, `${dir}/${d}`);
+    }
   } else {
     return;
   }
