@@ -8,7 +8,7 @@ exports.default = void 0;
 
 var _fs = _interopRequireDefault(require("fs"));
 
-var _htmlparser = _interopRequireDefault(require("htmlparser"));
+var _htmlparser = _interopRequireDefault(require("htmlparser2"));
 
 var _soupselectUpdate = require("soupselect-update");
 
@@ -19,6 +19,8 @@ var _sqwish = require("sqwish");
 var _commandLine = require("./command-line");
 
 var _htmlparser2html = _interopRequireDefault(require("./htmlparser2html"));
+
+var _handleNonstdTags = require("./handle-nonstd-tags");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -185,9 +187,15 @@ const removeStyleTags = (node, parent) => {
   }
 };
 
+const nonStandardClosingTagHandler = nonStdMap => {
+  return node => {
+    return nonStdMap.get(node.name);
+  };
+};
+
 const outputModifiedSrcFile = (dom, htmlOutput) => {
-  // html.configure({ disableAttribEscape: true });
-  const rawHtmlOutput = (0, _htmlparser2html.default)(dom, removeStyleTags);
+  const nonStdMap = (0, _handleNonstdTags.getTagMap)();
+  const rawHtmlOutput = (0, _htmlparser2html.default)(dom, removeStyleTags, nonStandardClosingTagHandler(nonStdMap));
 
   _fs.default.writeFileSync(htmlOutput, rawHtmlOutput);
 };
@@ -196,11 +204,72 @@ const createParseHandler = filename => {
   return new _htmlparser.default.DefaultHandler((err, dom) => {
     if (err) {
       console.error(err);
-      process.exit(1); // oh no something bad happened.
+      process.exit(1); // oh no something bad happened
     } else {
       cleanSrcFile(dom, filename);
     }
+  }, {
+    decodeEntities: true,
+    lowerCaseTags: false
   });
+};
+
+let invalidTags = [];
+
+const createPreParseHandler = filename => {
+  return {
+    callbacks: {
+      onopentag: name => {
+        if (!_handleNonstdTags.validHtmlTags.includes(name)) {
+          invalidTags.push({
+            name,
+            filename
+          });
+        }
+      },
+      onreset: () => {
+        linenumber = 1;
+        invalidTags = [];
+      },
+      onerror: err => {
+        if (err) {
+          console.error(err);
+          process.exit(1); // oh no something bad happened.
+        }
+      }
+    },
+    options: {
+      decodeEntities: true,
+      lowerCaseTags: false
+    }
+  };
+};
+
+const getFirstTagLineNumber = (filename, name) => {
+  const fileContents = getFileContents(filename);
+  const tagRegex = new RegExp(`<${name}`, 'i');
+  const firstMatch = tagRegex.exec(fileContents);
+  const index = firstMatch.index;
+  const fileBeforeMatch = fileContents.substr(0, index);
+  const newLineRegex = /\n/g;
+  let linenumber = 1;
+  let match = newLineRegex.exec(fileBeforeMatch);
+
+  while (match !== null && match.index < index) {
+    linenumber++;
+    match = newLineRegex.exec(fileBeforeMatch);
+  }
+
+  return linenumber;
+};
+
+const getInvalidTagInput = async function () {
+  for (const tag of invalidTags) {
+    const name = tag.name;
+    const filename = tag.filename;
+    const linenumber = getFirstTagLineNumber(filename, name);
+    await (0, _handleNonstdTags.handleNonStandardTags)(name, filename, linenumber);
+  }
 };
 
 const cleanSrcFile = (dom, filename) => {
@@ -232,7 +301,7 @@ const runDir = (runOptions, workingDir) => {
   files.forEach(file => {
     let filename = `${dir}/${file}`;
     let fileContents = getFileContents(filename);
-    let parser = new _htmlparser.default.Parser(createParseHandler(filename));
+    let parser = new _htmlparser.default.Parser(createPreParseHandler(filename));
     parser.parseComplete(fileContents);
   });
 
@@ -260,26 +329,31 @@ const filterFiletypes = filenames => {
 }; // do the stuff
 
 
-const run = runOptions => {
+const run = async function (runOptions) {
   // use options instead of runOptions if being run through
   // cli as opposed to via another script
   if (!runOptions) {
     runOptions = _commandLine.options;
   }
 
-  if (_commandLine.options.help || !_commandLine.options.src && !_commandLine.options.directory) {
+  if (runOptions.help || !runOptions.src && !runOptions.directory) {
     // print help message if not used properly
     console.log(_commandLine.usage);
-  } else if (_commandLine.options.directory) {
+  } else if (runOptions.directory) {
     runDir(runOptions);
   } else {
     // didn't use directory mode
-    let filenames = _commandLine.options.src;
+    let filenames = runOptions.src;
     filenames = filterFiletypes(filenames);
 
-    for (let i = 0; i < _commandLine.options.src.length; i++) {
-      let currentFile = _commandLine.options.src[i];
+    for (let i = 0; i < filenames.length; i++) {
+      let currentFile = filenames[i];
       let fileContents = getFileContents(currentFile);
+      const parserOptions = createPreParseHandler(currentFile);
+      let preParser = new _htmlparser.default.Parser(parserOptions.callbacks, parserOptions.options);
+      preParser.write(fileContents);
+      preParser.end();
+      await getInvalidTagInput();
       let parser = new _htmlparser.default.Parser(createParseHandler(currentFile));
       parser.parseComplete(fileContents);
     }

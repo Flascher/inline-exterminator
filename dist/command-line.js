@@ -3,7 +3,9 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.usage = exports.options = void 0;
+exports.waitForInput = exports.usage = exports.options = void 0;
+
+var _readline = _interopRequireDefault(require("readline"));
 
 var _commandLineArgs = _interopRequireDefault(require("command-line-args"));
 
@@ -125,3 +127,17 @@ const sections = [{
 }];
 const usage = (0, _commandLineUsage.default)(sections);
 exports.usage = usage;
+
+const waitForInput = prompt => {
+  const rl = _readline.default.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  return new Promise(resolve => rl.question(prompt, ans => {
+    rl.close();
+    resolve(ans);
+  }));
+};
+
+exports.waitForInput = waitForInput;

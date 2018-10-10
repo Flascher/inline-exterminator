@@ -1,11 +1,12 @@
 import fs from 'fs';
-import htmlparser from 'htmlparser';
+import htmlparser from 'htmlparser2';
 import { select as $ } from 'soupselect-update';
 import nameGenerator from 'unique-names-generator';
 import { minify } from 'sqwish';
 
 import { options, usage } from './command-line';
 import html from './htmlparser2html';
+import { handleNonStandardTags, getTagMap, validHtmlTags } from './handle-nonstd-tags';
 
 // global hashmap to keep track of classes that have already been created
 // this should reduce or eliminate any classes that would otherwise have duplicate properties
@@ -181,9 +182,16 @@ const removeStyleTags = (node, parent) => {
   }
 }
 
+const nonStandardClosingTagHandler = (nonStdMap) => {
+  return (node) => {
+    return nonStdMap.get(node.name);
+  };
+}
+
 const outputModifiedSrcFile = (dom, htmlOutput) => {
-  // html.configure({ disableAttribEscape: true });
-  const rawHtmlOutput = html(dom, removeStyleTags)
+  const nonStdMap = getTagMap();
+
+  const rawHtmlOutput = html(dom, removeStyleTags, nonStandardClosingTagHandler(nonStdMap));
   fs.writeFileSync(htmlOutput, rawHtmlOutput);
 }
 
@@ -191,17 +199,78 @@ const createParseHandler = (filename) => {
   return new htmlparser.DefaultHandler((err, dom) => {
     if (err) {
       console.error(err);
-      process.exit(1); // oh no something bad happened.
+      process.exit(1); // oh no something bad happened
     } else {
       cleanSrcFile(dom, filename);
     }
-  })
+  }, {
+    decodeEntities: true,
+    lowerCaseTags: false
+  });
+}
+
+let invalidTags = [];
+
+const createPreParseHandler = (filename) => {
+  return {
+    callbacks: {
+      onopentag: (name) => {
+        if (!validHtmlTags.includes(name)) {
+          invalidTags.push({ name, filename });
+        }
+      },
+      onreset: () => {
+        linenumber = 1;
+        invalidTags = [];
+      },
+      onerror: (err) => {
+        if (err) {
+          console.error(err);
+          process.exit(1); // oh no something bad happened.
+        }
+      }
+    },
+    options: {
+      decodeEntities: true,
+      lowerCaseTags: false
+    }
+  };
+}
+
+const getFirstTagLineNumber = (filename, name) => {
+  const fileContents = getFileContents(filename);
+
+  const tagRegex = new RegExp(`<${name}`, 'i');
+
+  const firstMatch = tagRegex.exec(fileContents);
+  const index = firstMatch.index;
+  const fileBeforeMatch = fileContents.substr(0, index);
+
+  const newLineRegex = /\n/g;
+  let linenumber = 1;
+  let match = newLineRegex.exec(fileBeforeMatch);
+
+  while (match !== null && match.index < index) {
+    linenumber++;
+    match = newLineRegex.exec(fileBeforeMatch);
+  }
+
+  return linenumber;
+}
+
+const getInvalidTagInput = async function() {
+  for (const tag of invalidTags) {
+    const name = tag.name;
+    const filename = tag.filename;
+    const linenumber = getFirstTagLineNumber(filename, name);
+
+    await handleNonStandardTags(name, filename, linenumber);
+  }
 }
 
 const cleanSrcFile = (dom, filename) => {
   const badStyles = getBadStyles(dom);
   addInlineStylesToStyleMap(badStyles);
-  
   
   const htmlOutput = options['no-replace'] === undefined
     ? filename
@@ -240,7 +309,7 @@ const runDir = (runOptions, workingDir) => {
     let filename = `${dir}/${file}`;
     let fileContents = getFileContents(filename);
 
-    let parser = new htmlparser.Parser(createParseHandler(filename));
+    let parser = new htmlparser.Parser(createPreParseHandler(filename));
     parser.parseComplete(fileContents);
   });
 
@@ -268,27 +337,33 @@ const filterFiletypes = (filenames) => {
 }
 
 // do the stuff
-const run = (runOptions) => {
+const run = async function(runOptions) {
   // use options instead of runOptions if being run through
   // cli as opposed to via another script
   if (!runOptions) {
     runOptions = options;
   }
 
-  if (options.help || (!options.src && !options.directory)) {
+  if (runOptions.help || (!runOptions.src && !runOptions.directory)) {
     // print help message if not used properly
     console.log(usage);
-  } else if (options.directory) {
+  } else if (runOptions.directory) {
     runDir(runOptions);
   } else {
     // didn't use directory mode
-    let filenames = options.src;
+    let filenames = runOptions.src;
 
     filenames = filterFiletypes(filenames);
 
-    for (let i = 0; i < options.src.length; i++) {
-      let currentFile = options.src[i];
+    for (let i = 0; i < filenames.length; i++) {
+      let currentFile = filenames[i];
       let fileContents = getFileContents(currentFile);
+      
+      const parserOptions = createPreParseHandler(currentFile);
+      let preParser = new htmlparser.Parser(parserOptions.callbacks, parserOptions.options);
+      preParser.write(fileContents);
+      preParser.end();
+      await getInvalidTagInput();
       
       let parser = new htmlparser.Parser(createParseHandler(currentFile));
       parser.parseComplete(fileContents);
