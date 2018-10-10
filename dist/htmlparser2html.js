@@ -53,7 +53,7 @@ const html = (item, parent, eachFn, nonStdHandler) => {
       case 'style':
       case 'script':
       case 'tag':
-        let attrStr = getAttrStr(item); // check to see if tag is a serverside element that we don't want to bother with
+        let attrStr = getAttrStr(item); // check to see if tag is a serverside element that we need to handle
 
         if (!_handleNonstdTags.validHtmlTags.includes(item.name)) {
           return `<${item.name}${attrStr}>${html(item.children, original, eachFn, nonStdHandler)}${nonStdHandler(item) || ''}`;

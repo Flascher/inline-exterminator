@@ -71,7 +71,7 @@ const addStyleToMap = (minifiedCss, className) => {
   
   if (className !== undefined) {
     key = minifiedCss;
-    value = className;
+    value = { className, isUsed: false };
 
     styleMap.set(key, value);
   }
@@ -87,11 +87,16 @@ const addStyleToMap = (minifiedCss, className) => {
 }
 
 const styleMapToCssFile = (filename) => {
-  // key = styles (no whitespace) that belong to a class
-  // value = the class name that contains the styles in its key
+  // key = styles properties (minified) that belong to a class
+  // value = an object containing the class name that contains the styles in its key as well as 
+  //         a bool tracking whether this class has already been output to the css file
   styleMap.forEach((v, k) => {
-    const cssString = prettifyCss(`.${v}`, k);
-    fs.appendFileSync(options.output, cssString);
+    if(!v.isUsed) {
+      const cssString = prettifyCss(`.${v}`, k);
+      fs.appendFileSync(options.output, cssString);
+      const usedValue = { className: v.className, isUsed: true };
+      styleMap.set(k, usedValue);
+    }
   });
 
 }
@@ -109,7 +114,7 @@ const addInlineStylesToStyleMap = (dom) => {
 const cleanNode = (node) => {
   if (node.attribs && node.attribs.style) {
     const minStyle = minifyCss(node.attribs.style);
-    const replacementClass = styleMap.get(minStyle);
+    const replacementClass = styleMap.get(minStyle).className;
 
     if (!node.attribs.class) {
       node.attribs.class = replacementClass;
@@ -283,7 +288,7 @@ const cleanSrcFile = (dom, filename) => {
 }
 
 // do the stuff, but on a directory
-const runDir = (runOptions, workingDir) => {
+const runDir = async function(runOptions, workingDir) {
   let dir = workingDir === undefined
     ? runOptions.directory
     : workingDir;
@@ -305,13 +310,19 @@ const runDir = (runOptions, workingDir) => {
 
   const isLeafDir = dirs.length === 0;
 
-  files.forEach(file => {
+  for (const file of files) {
     let filename = `${dir}/${file}`;
     let fileContents = getFileContents(filename);
 
-    let parser = new htmlparser.Parser(createPreParseHandler(filename));
+    const parserOptions = createPreParseHandler(filename);
+    let preParser = new htmlparser.Parser(parserOptions.callbacks, parserOptions.options);
+    preParser.write(fileContents);
+    preParser.end();
+    await getInvalidTagInput();
+    
+    let parser = new htmlparser.Parser(createParseHandler(filename), parserOptions.options);
     parser.parseComplete(fileContents);
-  });
+  };
 
   if (runOptions.recursive && !isLeafDir) {
     dirs.forEach(d => runDir(runOptions, `${dir}/${d}`));
@@ -365,7 +376,7 @@ const run = async function(runOptions) {
       preParser.end();
       await getInvalidTagInput();
       
-      let parser = new htmlparser.Parser(createParseHandler(currentFile));
+      let parser = new htmlparser.Parser(createParseHandler(currentFile), parserOptions.options);
       parser.parseComplete(fileContents);
     }
   }
