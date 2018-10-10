@@ -245,9 +245,12 @@ const createPreParseHandler = (filename) => {
 const getFirstTagLineNumber = (filename, name) => {
   const fileContents = getFileContents(filename);
 
-  const tagRegex = new RegExp(`<${name}`, 'i');
+  const tagRegex = new RegExp(`<${name}\\s`, 'i');
 
   const firstMatch = tagRegex.exec(fileContents);
+  if (firstMatch === null) {
+    fs.appendFileSync('nonStdMap.log', `Failed to find ${name} in ${filename}`);
+  }
   const index = firstMatch.index;
   const fileBeforeMatch = fileContents.substr(0, index);
 

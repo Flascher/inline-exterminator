@@ -1,3 +1,5 @@
+import fs from 'fs';
+
 import { waitForInput } from './command-line';
 
 const validHtmlTags = [
@@ -121,6 +123,8 @@ const handleNonStandardTags = async function(tagname, filename, linenumber) {
   if (!foundTags.has(tagname)) {
     // newly encountered non-standard tag
     if (foundTags.size === 0) {
+      fs.appendFileSync('nonStdMap.log', '\n===========================================\n');
+
       // first encounter example prompt
       console.log('Non-standard HTML tag(s) have been found.\n');
       console.log('In order to preserve potentially crucial serverside elements');
@@ -137,7 +141,11 @@ const handleNonStandardTags = async function(tagname, filename, linenumber) {
     // more than 100k lines should theoretically be supported, but its unlikely and
     // will just result in slightly less pretty formatting when asking for input
     const locationPrompt = `${filename}:${linenumber}`.padEnd(filename.length + 6);
-    const answer = await waitForInput(`${locationPrompt} | tag: <${tagname} : `);
+    const prompt = `${locationPrompt} | tag: <${tagname} : `;
+    let answer = await waitForInput(prompt);
+    answer = createClosingTag(tagname, answer);
+
+    fs.appendFileSync('nonStdMap.log', `${prompt} ${answer}\n`);
 
     foundTags.set(tagname, createClosingTag(tagname, answer));
   }

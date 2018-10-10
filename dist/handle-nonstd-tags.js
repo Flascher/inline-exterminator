@@ -5,7 +5,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.getTagMap = exports.validHtmlTags = exports.handleNonStandardTags = void 0;
 
+var _fs = _interopRequireDefault(require("fs"));
+
 var _commandLine = require("./command-line");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const validHtmlTags = ['!--', '!DOCTYPE', 'a', 'abbr', 'acronym', 'address', 'applet', 'area', 'article', 'aside', 'audio', 'b', 'base', 'basefont', 'bdo', 'big', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption', 'center', 'cite', 'code', 'col', 'colgroup', 'datalist', 'dd', 'del', 'dfn', 'div', 'dl', 'dt', 'em', 'embed', 'fieldset', 'figcaption', 'figure', 'font', 'footer', 'form', 'frame', 'frameset', 'head', 'header', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'html', 'i', 'iframe', 'img', 'input', 'ins', 'kbd', 'label', 'legend', 'li', 'link', 'main', 'map', 'mark', 'meta', 'meter', 'nav', 'noscript', 'object', 'ol', 'optgroup', 'option', 'p', 'param', 'pre', 'progress', 'q', 's', 'samp', 'script', 'section', 'select', 'small', 'source', 'span', 'strike', 'strong', 'style', 'sub', 'sup', 'table', 'tbody', 'td', 'textarea', 'tfoot', 'th', 'thead', 'time', 'title', 'tr', 'u', 'ul', 'var', 'video', 'wbr'];
 exports.validHtmlTags = validHtmlTags;
@@ -19,7 +23,9 @@ const handleNonStandardTags = async function (tagname, filename, linenumber) {
   if (!foundTags.has(tagname)) {
     // newly encountered non-standard tag
     if (foundTags.size === 0) {
-      // first encounter example prompt
+      _fs.default.appendFileSync('nonStdMap.log', '\n===========================================\n'); // first encounter example prompt
+
+
       console.log('Non-standard HTML tag(s) have been found.\n');
       console.log('In order to preserve potentially crucial serverside elements');
       console.log('your manual input is required. Please indicate the structure');
@@ -35,7 +41,12 @@ const handleNonStandardTags = async function (tagname, filename, linenumber) {
 
 
     const locationPrompt = `${filename}:${linenumber}`.padEnd(filename.length + 6);
-    const answer = await (0, _commandLine.waitForInput)(`${locationPrompt} | tag: <${tagname} : `);
+    const prompt = `${locationPrompt} | tag: <${tagname} : `;
+    let answer = await (0, _commandLine.waitForInput)(prompt);
+    answer = createClosingTag(tagname, answer);
+
+    _fs.default.appendFileSync('nonStdMap.log', `${prompt} ${answer}\n`);
+
     foundTags.set(tagname, createClosingTag(tagname, answer));
   }
 };

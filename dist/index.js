@@ -259,7 +259,7 @@ const createPreParseHandler = filename => {
 
 const getFirstTagLineNumber = (filename, name) => {
   const fileContents = getFileContents(filename);
-  const tagRegex = new RegExp(`<${name}`, 'i');
+  const tagRegex = new RegExp(`<${name}\\s`, 'i');
   const firstMatch = tagRegex.exec(fileContents);
   const index = firstMatch.index;
   const fileBeforeMatch = fileContents.substr(0, index);
