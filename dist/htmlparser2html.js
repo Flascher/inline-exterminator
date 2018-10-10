@@ -4,9 +4,10 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
+
+var _handleNonstdTags = require("./handle-nonstd-tags");
+
 const voidElements = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
-const validHtmlTags = ['!--', '!DOCTYPE', 'a', 'abbr', 'acronym', 'address', 'applet', 'area', 'article', 'aside', 'audio', 'b', 'base', 'basefont', 'bdo', 'big', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption', 'center', 'cite', 'code', 'col', 'colgroup', 'datalist', 'dd', 'del', 'dfn', 'div', 'dl', 'dt', 'em', 'embed', 'fieldset', 'figcaption', 'figure', 'font', 'footer', 'form', 'frame', 'frameset', 'head', 'header', 'h1', 'hr', 'html', 'i', 'iframe', 'img', 'input', 'ins', 'kbd', 'label', 'legend', 'li', 'link', 'main', 'map', 'mark', 'meta', 'meter', 'nav', 'noscript', 'object', 'ol', 'optgroup', 'option', 'p', 'param', 'pre', 'progress', 'q', 's', 'samp', 'script', 'section', 'select', 'small', 'source', 'span', 'strike', 'strong', 'style', 'sub', 'sup', 'table', 'tbody', 'td', 'textarea', 'tfoot', 'th', 'thead', 'time', 'title', 'tr', 'u', 'ul', 'var', 'video', 'wbr'];
-const serverSideElements = ['%', '%#', '%:', '%=', '%@', '%@page', 'jsp:param', 'jsp:include', 'bean:write', 'html:text', 'html:hidden', '%--', '%--taglib', '?=', '?'];
 
 const getAttrStr = item => {
   if (item.attribs && Object.keys(item.attribs).length > 0) {
@@ -54,8 +55,8 @@ const html = (item, parent, eachFn, nonStdHandler) => {
       case 'tag':
         let attrStr = getAttrStr(item); // check to see if tag is a serverside element that we don't want to bother with
 
-        if (!validHtmlTags.includes(item.name)) {
-          return `<${item.name}${attrStr}>${html(item.children, original, eachFn, nonStdHandler)}${nonStdHandler(item)}`;
+        if (!_handleNonstdTags.validHtmlTags.includes(item.name)) {
+          return `<${item.name}${attrStr}>${html(item.children, original, eachFn, nonStdHandler)}${nonStdHandler(item) || ''}`;
         }
 
         let result = '';
@@ -70,7 +71,7 @@ const html = (item, parent, eachFn, nonStdHandler) => {
         } else if (voidElements.includes(item.name)) {
           result = `<${item.name}${attrStr} />`;
         } else {
-          result = `<${item.name}${attrStr}></${item.name}>`;
+          result = `<${item.name}></${item.name}>`;
         }
 
         return result;
