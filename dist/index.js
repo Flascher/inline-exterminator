@@ -261,18 +261,25 @@ const getFirstTagLineNumber = (filename, name) => {
   const fileContents = getFileContents(filename);
   const tagRegex = new RegExp(`<${name}\\s`, 'i');
   const firstMatch = tagRegex.exec(fileContents);
-  const index = firstMatch.index;
-  const fileBeforeMatch = fileContents.substr(0, index);
-  const newLineRegex = /\n/g;
-  let linenumber = 1;
-  let match = newLineRegex.exec(fileBeforeMatch);
 
-  while (match !== null && match.index < index) {
-    linenumber++;
-    match = newLineRegex.exec(fileBeforeMatch);
+  if (firstMatch === null) {
+    _fs.default.appendFileSync('nonStdMap.log', `Failed to find ${name} in ${filename}`);
+
+    return '??';
+  } else {
+    const index = firstMatch.index;
+    const fileBeforeMatch = fileContents.substr(0, index);
+    const newLineRegex = /\n/g;
+    let linenumber = 1;
+    let match = newLineRegex.exec(fileBeforeMatch);
+
+    while (match !== null && match.index < index) {
+      linenumber++;
+      match = newLineRegex.exec(fileBeforeMatch);
+    }
+
+    return linenumber;
   }
-
-  return linenumber;
 };
 
 const getInvalidTagInput = async function () {
