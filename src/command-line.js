@@ -1,3 +1,4 @@
+import readline from 'readline';
 import commandLineArgs from 'command-line-args';
 import commandLineUsage from 'command-line-usage';
 
@@ -115,4 +116,16 @@ const sections = [
 
 const usage = commandLineUsage(sections);
 
-export { options, usage };
+const waitForInput = (prompt) => {
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    return new Promise(resolve => rl.question(prompt, ans => {
+        rl.close();
+        resolve(ans);
+    }));
+}
+
+export { options, usage, waitForInput };

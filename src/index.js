@@ -1,11 +1,12 @@
 import fs from 'fs';
-import htmlparser from 'htmlparser';
+import htmlparser from 'htmlparser2';
 import { select as $ } from 'soupselect-update';
 import nameGenerator from 'unique-names-generator';
 import { minify } from 'sqwish';
 
 import { options, usage } from './command-line';
 import html from './htmlparser2html';
+import { handleNonStandardTags, getTagMap, validHtmlTags } from './handle-nonstd-tags';
 
 // global hashmap to keep track of classes that have already been created
 // this should reduce or eliminate any classes that would otherwise have duplicate properties
@@ -70,7 +71,10 @@ const addStyleToMap = (minifiedCss, className) => {
   
   if (className !== undefined) {
     key = minifiedCss;
-    value = className;
+    value = {
+      className: className,
+      isUsed: false
+    };
 
     styleMap.set(key, value);
   }
@@ -79,18 +83,26 @@ const addStyleToMap = (minifiedCss, className) => {
     const randomClass = nameGenerator.generate('-');
     key = minifiedCss;
     // remove whitespace from properties for format-agnostic duplicate checking
-    value = randomClass;
+    value = {
+      className: randomClass,
+      isUsed: false
+    };
 
     styleMap.set(key, value);
   }
 }
 
 const styleMapToCssFile = (filename) => {
-  // key = styles (no whitespace) that belong to a class
-  // value = the class name that contains the styles in its key
+  // key = styles properties (minified) that belong to a class
+  // value = an object containing the class name that contains the styles in its key as well as 
+  //         a bool tracking whether this class has already been output to the css file
   styleMap.forEach((v, k) => {
-    const cssString = prettifyCss(`.${v}`, k);
-    fs.appendFileSync(options.output, cssString);
+    if(!v.isUsed) {
+      const cssString = prettifyCss(`.${v.className}`, k);
+      fs.appendFileSync(options.output, cssString);
+      const usedValue = { className: v.className, isUsed: true };
+      styleMap.set(k, usedValue);
+    }
   });
 
 }
@@ -108,7 +120,7 @@ const addInlineStylesToStyleMap = (dom) => {
 const cleanNode = (node) => {
   if (node.attribs && node.attribs.style) {
     const minStyle = minifyCss(node.attribs.style);
-    const replacementClass = styleMap.get(minStyle);
+    const replacementClass = styleMap.get(minStyle).className;
 
     if (!node.attribs.class) {
       node.attribs.class = replacementClass;
@@ -181,9 +193,16 @@ const removeStyleTags = (node, parent) => {
   }
 }
 
+const nonStandardClosingTagHandler = (nonStdMap) => {
+  return (node) => {
+    return nonStdMap.get(node.name);
+  };
+}
+
 const outputModifiedSrcFile = (dom, htmlOutput) => {
-  // html.configure({ disableAttribEscape: true });
-  const rawHtmlOutput = html(dom, removeStyleTags)
+  const nonStdMap = getTagMap();
+
+  const rawHtmlOutput = html(dom, removeStyleTags, nonStandardClosingTagHandler(nonStdMap));
   fs.writeFileSync(htmlOutput, rawHtmlOutput);
 }
 
@@ -191,17 +210,84 @@ const createParseHandler = (filename) => {
   return new htmlparser.DefaultHandler((err, dom) => {
     if (err) {
       console.error(err);
-      process.exit(1); // oh no something bad happened.
+      process.exit(1); // oh no something bad happened
     } else {
       cleanSrcFile(dom, filename);
     }
-  })
+  }, {
+    decodeEntities: true,
+    lowerCaseTags: false
+  });
+}
+
+let invalidTags = [];
+
+const createPreParseHandler = (filename) => {
+  return {
+    callbacks: {
+      onopentag: (name) => {
+        if (!validHtmlTags.includes(name)) {
+          invalidTags.push({ name, filename });
+        }
+      },
+      onreset: () => {
+        linenumber = 1;
+        invalidTags = [];
+      },
+      onerror: (err) => {
+        if (err) {
+          console.error(err);
+          process.exit(1); // oh no something bad happened.
+        }
+      }
+    },
+    options: {
+      decodeEntities: true,
+      lowerCaseTags: false
+    }
+  };
+}
+
+const getFirstTagLineNumber = (filename, name) => {
+  const fileContents = getFileContents(filename);
+
+  const tagRegex = new RegExp(`<${name}\\s`, 'i');
+
+  const firstMatch = tagRegex.exec(fileContents);
+  if (firstMatch === null) {
+    fs.appendFileSync('nonStdMap.log', `Failed to find ${name} in ${filename}\n`);
+
+    return '??';
+  } else {
+    const index = firstMatch.index;
+    const fileBeforeMatch = fileContents.substr(0, index);
+
+    const newLineRegex = /\n/g;
+    let linenumber = 1;
+    let match = newLineRegex.exec(fileBeforeMatch);
+
+    while (match !== null && match.index < index) {
+      linenumber++;
+      match = newLineRegex.exec(fileBeforeMatch);
+    }
+
+    return linenumber;
+  }
+}
+
+const getInvalidTagInput = async function() {
+  for (const tag of invalidTags) {
+    const name = tag.name;
+    const filename = tag.filename;
+    const linenumber = getFirstTagLineNumber(filename, name);
+
+    await handleNonStandardTags(name, filename, linenumber);
+  }
 }
 
 const cleanSrcFile = (dom, filename) => {
   const badStyles = getBadStyles(dom);
   addInlineStylesToStyleMap(badStyles);
-  
   
   const htmlOutput = options['no-replace'] === undefined
     ? filename
@@ -214,7 +300,7 @@ const cleanSrcFile = (dom, filename) => {
 }
 
 // do the stuff, but on a directory
-const runDir = (runOptions, workingDir) => {
+const runDir = async function(runOptions, workingDir) {
   let dir = workingDir === undefined
     ? runOptions.directory
     : workingDir;
@@ -236,16 +322,24 @@ const runDir = (runOptions, workingDir) => {
 
   const isLeafDir = dirs.length === 0;
 
-  files.forEach(file => {
+  for (const file of files) {
     let filename = `${dir}/${file}`;
     let fileContents = getFileContents(filename);
 
-    let parser = new htmlparser.Parser(createParseHandler(filename));
+    const parserOptions = createPreParseHandler(filename);
+    let preParser = new htmlparser.Parser(parserOptions.callbacks, parserOptions.options);
+    preParser.write(fileContents);
+    preParser.end();
+    await getInvalidTagInput();
+    
+    let parser = new htmlparser.Parser(createParseHandler(filename), parserOptions.options);
     parser.parseComplete(fileContents);
-  });
+  };
 
   if (runOptions.recursive && !isLeafDir) {
-    dirs.forEach(d => runDir(runOptions, `${dir}/${d}`));
+    for (const d of dirs) {
+      await runDir(runOptions, `${dir}/${d}`);
+    }
   } else {
     return;
   }
@@ -268,29 +362,35 @@ const filterFiletypes = (filenames) => {
 }
 
 // do the stuff
-const run = (runOptions) => {
+const run = async function(runOptions) {
   // use options instead of runOptions if being run through
   // cli as opposed to via another script
   if (!runOptions) {
     runOptions = options;
   }
 
-  if (options.help || (!options.src && !options.directory)) {
+  if (runOptions.help || (!runOptions.src && !runOptions.directory)) {
     // print help message if not used properly
     console.log(usage);
-  } else if (options.directory) {
+  } else if (runOptions.directory) {
     runDir(runOptions);
   } else {
     // didn't use directory mode
-    let filenames = options.src;
+    let filenames = runOptions.src;
 
     filenames = filterFiletypes(filenames);
 
-    for (let i = 0; i < options.src.length; i++) {
-      let currentFile = options.src[i];
+    for (let i = 0; i < filenames.length; i++) {
+      let currentFile = filenames[i];
       let fileContents = getFileContents(currentFile);
       
-      let parser = new htmlparser.Parser(createParseHandler(currentFile));
+      const parserOptions = createPreParseHandler(currentFile);
+      let preParser = new htmlparser.Parser(parserOptions.callbacks, parserOptions.options);
+      preParser.write(fileContents);
+      preParser.end();
+      await getInvalidTagInput();
+      
+      let parser = new htmlparser.Parser(createParseHandler(currentFile), parserOptions.options);
       parser.parseComplete(fileContents);
     }
   }
