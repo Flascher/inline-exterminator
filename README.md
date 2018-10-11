@@ -38,6 +38,84 @@ Once installed globally with npm, this script can be called via `inline-extermin
 | `--output`, `-o`    | Name of file to put extracted css in         | String      |
 | `--help`, `-h`      | Displays help text similar to this readme    | Boolean     |
 
+## Non-standard Tag Handling
+
+When a non-standard tag is encountered `inlex` prompts you to tell it how that tag should be structured.
+This is done to help preserve any server side functionality that might be included with a `.jsp`,
+`.php`, `.asp` file (or something similar).
+
+### Why?
+
+Unfortunately there are no good options for HTML parsers (that I've found) that are both lenient
+enough with the HTML spec and that make note of what the closing tag is (as in strict HTML you should
+always be able to infer this from the name of the tag). So unfortunately, to make sure the output 
+has the smallest negative impact on the code possible, some manual input for non-standard tags is
+required.
+
+A few common examples, starting with how they look before `inlex` modifies them, the prmopt you're given,
+and how you should answer follow:
+
+### Code tags
+
+These tags don't have any form of closing tag. In most cases these are server side tags that indicate
+that the server side code inbetween the left and right tags should be run, and not just be HTML. Some
+examples include `<?php ... ?>` in PHP, and `<% ... %>` in JSP/ASP Classic. There are other examples
+that aren't code tags as well, but this example should suffice for any server side elements that are
+void or self-closing.
+
+#### Before
+
+`<%@ page language="java" contentType="text/html; charset=ISO-8859-1" pageEncoding="ISO-8859"%>`
+
+#### Prompt
+
+`file.jsp:12   | <%@ : `
+
+#### Answer
+
+`(enter)`
+
+Providing no input and hitting enter/return will get you the same output after `inlex` has modified
+the HTML.
+
+### Standard-style tags
+
+These tags are structured like typical HTML elements, but their names are not recognized by the HTML
+spec.
+
+#### Before
+
+`<c:import url="Video_51_header.jsp"> ... </c:import>`
+
+#### Prompt
+
+`file.jsp:36   | <c:import : `
+
+#### Answer
+
+`</[name]>`
+
+When asking for the closing tag, you can use `[name]` and that will be replaced with the name of the
+tag itself (in this case `c:import`). The result would make the closing tag `</c:import>`.
+
+### Void tags
+
+#### Before
+
+`<sql:setDataSource var="bunny" dataSource="jdbc/vid_53" />`
+
+#### Prompt
+
+`file.jsp:44   | <sql:setDataSource : `
+
+#### Answer
+
+`[void]`
+
+`[void]` is another special token you can use to tell `inlex` that the tag should be self closing
+in the same style as typical HTML. Specifying `[void]` in this case results in the output being
+the same as it was before parsing the file.
+
 ## Examples
 
 ### Basic Usage
