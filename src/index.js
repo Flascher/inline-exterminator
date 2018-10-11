@@ -7,6 +7,7 @@ import { minify } from 'sqwish';
 import { options, usage } from './command-line';
 import html from './htmlparser2html';
 import { handleNonStandardTags, getTagMap, validHtmlTags } from './handle-nonstd-tags';
+import { isTagDeprecated, fontTagSizeToCss, getDeprecatedAttrsForNode } from './deprecated-html';
 
 // global hashmap to keep track of classes that have already been created
 // this should reduce or eliminate any classes that would otherwise have duplicate properties
@@ -117,6 +118,85 @@ const addInlineStylesToStyleMap = (dom) => {
   });
 }
 
+let deprecationClasses = [];
+
+const addClassToNode = (node, className) => {
+  node.attribs === undefined
+    ? node.attribs = { class: className }
+    : node.attribs.class === undefined
+      ? node.attribs.class = className
+      : node.attribs.class = `${node.attribs.class} ${className}`;
+
+  return node;
+}
+
+const updateDeprecatedTag = (node) => {
+  switch (node.name) {
+    case 'center':
+      node.name = 'p';
+
+      addClassToNode(node, 'centered');
+      deprecationClasses.push({ className: 'centered', declaration: 'text-align:center;'});
+      break;
+
+    case 'basefont':
+    case 'font':
+      let fontColor, fontFace, fontSize, declaration;
+      const fontClass = nameGenerator.generate('-');
+      if (node.attribs) {
+        fontColor = node.attribs.color || '';
+        fontFace = node.attribs.face || '';
+        fontSize = fontTagSizeToCss(node.attribs.size);
+
+        declaration = `color:${fontColor};font-family:${fontFace};font-size:${fontSize}`;
+      }
+      if (node.children && node.children.length > 0) {
+        const updatedChildren = node.children.map(child => addClassToNode(child, fontClass));
+
+        // remove font node, replace it with the font node's children
+        node.parent.children = updatedChildren;
+      }
+      break;
+  }
+}
+
+const updateDeprecatedAttr = (node, attr) => {
+  let declaration = '';
+
+  switch (attr) {
+    case 'align':
+      declaration = `text-align:${node.attribs[attr]};`;
+      break;
+
+    case 'border':
+      declaration = `border-width:${node.attribs[attr]};`;
+      break;
+
+    case 'width':
+      declaration = `width:${node.attribs[attr]};`;
+      break;
+
+    case 'valign':
+      declaration = `vertical-align:${node.attribs[attr]};`;
+      break;
+  }
+
+  if (!styleMap.has(declaration)) {
+    const attrClass = nameGenerator.generate('-');
+    addStyleToMap(declaration, attrClass);
+  }
+}
+
+const handleDeprecations = (node) => {
+  if (isTagDeprecated(node)) {
+    updateDeprecatedTag(node);
+  }
+  const deprecatedAttrs = getDeprecatedAttrsForNode(node);
+  if (deprecatedAttrs.length > 0) {
+    deprecatedAttrs.forEach(attr => updateDeprecatedAttr(node, attr));
+  }
+}
+
 const cleanNode = (node) => {
   if (node.attribs && node.attribs.style) {
     const minStyle = minifyCss(node.attribs.style);
@@ -131,6 +211,8 @@ const cleanNode = (node) => {
     // remove that nasty inline style
     node.attribs.style = undefined;
   }
+  
+  handleDeprecations(node);
 
   return node;
 }

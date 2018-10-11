@@ -36,23 +36,37 @@ padding:5px;
 <c:import url="Video_51_header.jsp">
 	<c:param name="tagLine" value="Take My Love, Take My Land...You Can't Take The Sky From Me!"></c:param>
 </c:import>
+
+	<font color="black" face="Times New Roman" size="3">
+		<div>
+			<p>This is a test for deprecated font tags</p>
+			<span>Nothing to see here, move along</span>
+		</div>
+	</font>
 	
 	<div id="content" class="testing testing123" style="border: 1px solid black;">
-		<h1>Database: vid_53, image data table</h1>
+		<h1>Database: vid_53, image data table</h1>		
 			
-			
-	<sql:setDataSource var="bunny" dataSource="jdbc/vid_53" />
-	
-	<sql:query var="rabbit" dataSource="${bunny }">SELECT id, imageName, image_extension FROM images</sql:query>
+		<sql:setDataSource var="bunny" dataSource="jdbc/vid_53" />
 		
-	<table style="text-align:left;">
-		<tr><th>id</th><th>name</th><th>extension</th></tr>
-		<c:forEach var="row" items="${rabbit.rows }" >	
-			<tr>
-			<th style="font-weight:bold">record ${row.id }</th><td>${row.imageName }</td><td>${row.image_extension }</td>
-			</tr>	
-		</c:forEach>	
-	</table>	
+		<sql:query var="rabbit" dataSource="${bunny }">SELECT id, imageName, image_extension FROM images</sql:query>
+			
+		<center>
+			<table style="text-align:left;">
+				<tr>
+					<th>id</th>
+					<th>name</th>
+					<th>extension</th>
+				</tr>
+				<c:forEach var="row" items="${rabbit.rows }" >	
+					<tr>
+						<th style="font-weight:bold">record ${row.id }</th>
+						<td>${row.imageName }</td>
+						<td>${row.image_extension }</td>
+					</tr>	
+				</c:forEach>	
+			</table>
+		</center>
 	
 	</div>
 	
