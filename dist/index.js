@@ -84,7 +84,7 @@ const addStyleToMap = (minifiedCss, className) => {
   if (className !== undefined) {
     key = minifiedCss;
     value = {
-      className,
+      className: className,
       isUsed: false
     };
     styleMap.set(key, value);
@@ -94,7 +94,10 @@ const addStyleToMap = (minifiedCss, className) => {
 
       key = minifiedCss; // remove whitespace from properties for format-agnostic duplicate checking
 
-      value = randomClass;
+      value = {
+        className: randomClass,
+        isUsed: false
+      };
       styleMap.set(key, value);
     }
 };
