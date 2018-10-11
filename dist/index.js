@@ -108,7 +108,7 @@ const styleMapToCssFile = filename => {
   //         a bool tracking whether this class has already been output to the css file
   styleMap.forEach((v, k) => {
     if (!v.isUsed) {
-      const cssString = prettifyCss(`.${v}`, k);
+      const cssString = prettifyCss(`.${v.className}`, k);
 
       _fs.default.appendFileSync(_commandLine.options.output, cssString);
 
