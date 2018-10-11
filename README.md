@@ -96,7 +96,7 @@ spec.
 `</[name]>`
 
 When asking for the closing tag, you can use `[name]` and that will be replaced with the name of the
-tag itself (in this case `c:import`). The result would make the closing tag `</c:import>`.
+tag itself (in this case `[name] = c:import`). The result would make the closing tag `</c:import>`.
 
 ### Void tags
 
@@ -114,7 +114,8 @@ tag itself (in this case `c:import`). The result would make the closing tag `</c
 
 `[void]` is another special token you can use to tell `inlex` that the tag should be self closing
 in the same style as typical HTML. Specifying `[void]` in this case results in the output being
-the same as it was before parsing the file.
+the same as it was before parsing the file. Using no input like a code tag would result in
+`<sql:setDataSource var="bunny" dataSource="jdbc/vid_53">` without the self-closing `/>`.
 
 ## Examples
 
