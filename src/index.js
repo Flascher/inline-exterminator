@@ -196,15 +196,23 @@ const updateDeprecatedAttr = (node, attr) => {
       break;
 
     case 'cellpadding':
-      attrClass = `padding-${node.attribs[attr]}`;
-      declaration = `border-collapse:collapse;padding:${node.attribs[attr]};`;
+      const match = (node.attribs[attr]).match(/^(\d*|\d*\.\d*)(\w*)$/);
+      let value = match[1] || '';
+      let unit = match[2] || '';
+      unit = unit === '' ? 'px' : unit;
+      attrClass = `padding-${value}${unit}`;
+      declaration = `border-collapse:collapse;padding:${value}${unit};`;
       selectorExtra = ['th', 'td'];
       hasSelectorExtra = true;
       break;
 
     case 'cellspacing':
-      attrClass = `border-spacing-${node.attribs[attr]}`;
-      declaration = `border-collapse:collapse;border-spacing:${node.attribs[attr]};`;
+      const match = (node.attribs[attr]).match(/^(\d*|\d*\.\d*)(\w*)$/);
+      let value = match[1] || '';
+      let unit = match[2] || '';
+      unit = unit === '' ? 'px' : unit;
+      attrClass = `border-spacing-${value}${unit}`;
+      declaration = `border-collapse:collapse;border-spacing:${value}${unit};`;
       selectorExtra = ['th', 'td'];
       hasSelectorExtra = true;
       break;
