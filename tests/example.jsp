@@ -52,14 +52,14 @@ padding:5px;
 		<sql:query var="rabbit" dataSource="${bunny }">SELECT id, imageName, image_extension FROM images</sql:query>
 			
 		<center>
-			<table style="text-align:left;">
+			<table cellpadding="5" bgcolor="white" align="left">
 				<tr>
-					<th>id</th>
+					<th width="10">id</th>
 					<th>name</th>
 					<th>extension</th>
 				</tr>
 				<c:forEach var="row" items="${rabbit.rows }" >	
-					<tr>
+					<tr valign="middle">
 						<th style="font-weight:bold">record ${row.id }</th>
 						<td>${row.imageName }</td>
 						<td>${row.image_extension }</td>
