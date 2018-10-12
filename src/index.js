@@ -187,8 +187,12 @@ const updateDeprecatedAttr = (node, attr) => {
       break;
 
     case 'border':
-      attrClass = `border-width-${node.attribs[attr]}`;
-      declaration = `border-width:${node.attribs[attr]};`;
+      const match = (node.attribs[attr]).match(/^(\d*|\d*\.\d*)(\w*)$/);
+      let value = match[1] || '';
+      let unit = match[2] || '';
+      unit = unit === '' ? 'px' : unit;
+      attrClass = `border-width-${value}${unit}`;
+      declaration = `border-width:${value}${unit};`;
       break;
 
     case 'cellpadding':
