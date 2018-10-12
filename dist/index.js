@@ -22,6 +22,8 @@ var _htmlparser2html = _interopRequireDefault(require("./htmlparser2html"));
 
 var _handleNonstdTags = require("./handle-nonstd-tags");
 
+var _deprecatedHtml = require("./deprecated-html");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // global hashmap to keep track of classes that have already been created
@@ -131,6 +133,151 @@ const addInlineStylesToStyleMap = dom => {
   });
 };
 
+let deprecationClasses = [];
+
+const addClassToNode = (node, className) => {
+  if (node.attribs === undefined) {
+    node.attribs = {
+      class: className
+    };
+  } else {
+    if (node.attribs.class === undefined) {
+      node.attribs.class = className;
+    } else {
+      if (node.attribs.class.indexOf(className) === -1) {
+        node.attribs.class = `${node.attribs.class} ${className}`;
+      }
+    }
+  }
+
+  return node;
+};
+
+const updateDeprecatedTag = node => {
+  switch (node.name) {
+    case 'center':
+      node.name = 'div';
+      addClassToNode(node, 'centered');
+      deprecationClasses.push({
+        className: 'centered',
+        declaration: 'text-align:center;'
+      });
+      break;
+
+    case 'basefont':
+    case 'font':
+      let fontColor, fontFace, fontSize, declaration;
+
+      const fontClass = _uniqueNamesGenerator.default.generate('-');
+
+      if (node.attribs) {
+        fontColor = node.attribs.color || '';
+        fontFace = node.attribs.face || '';
+        fontSize = (0, _deprecatedHtml.fontTagSizeToCss)(node.attribs.size);
+        declaration = `color:${fontColor};font-family:${fontFace};font-size:${fontSize}`;
+        deprecationClasses.push({
+          className: fontClass,
+          declaration: declaration
+        });
+      }
+
+      if (node.children && node.children.length > 0) {
+        const updatedChildren = node.children.map(child => addClassToNode(child, fontClass)); // find the font tag's index in the children array
+
+        const fontIndex = node.parent.children.findIndex(child => Object.is(node, child)); // replace the font tag with all of its children
+
+        node.parent.children.splice(fontIndex, 1, ...updatedChildren);
+      }
+
+      break;
+  }
+};
+
+const updateDeprecatedAttr = (node, attr) => {
+  let attrClass;
+  let declaration = '';
+  let selectorExtra = '';
+  let hasSelectorExtra = false;
+
+  switch (attr) {
+    case 'align':
+      attrClass = `align-${node.attribs[attr]}`;
+      declaration = `text-align:${node.attribs[attr]};`;
+      break;
+
+    case 'bgcolor':
+      attrClass = _uniqueNamesGenerator.default.generate('-');
+      declaration = `background-color:${node.attribs[attr]};`;
+      break;
+
+    case 'border':
+      attrClass = `border-width-${node.attribs[attr]}`;
+      declaration = `border-width:${node.attribs[attr]};`;
+      break;
+
+    case 'cellpadding':
+      attrClass = `padding-${node.attribs[attr]}`;
+      declaration = `border-collapse:collapse;padding:${node.attribs[attr]};`;
+      selectorExtra = ['th', 'td'];
+      hasSelectorExtra = true;
+      break;
+
+    case 'cellspacing':
+      attrClass = `border-spacing-${node.attribs[attr]}`;
+      declaration = `border-collapse:collapse;border-spacing:${node.attribs[attr]};`;
+      selectorExtra = ['th', 'td'];
+      hasSelectorExtra = true;
+      break;
+
+    case 'width':
+      const match = node.attribs[attr].match(/^(\d*|\d*\.\d*)(\w*)$/);
+      let value = match[1] || '';
+      let unit = match[2] || '';
+      unit = unit === '' ? 'px' : unit;
+      attrClass = `width-${value}${unit}`;
+      declaration = `width:${value}${unit};`;
+      break;
+
+    case 'valign':
+      attrClass = `vert-align-${node.attribs[attr]}`;
+      declaration = `vertical-align:${node.attribs[attr]};`;
+      break;
+
+    default:
+      return;
+  }
+
+  if (!styleMap.has(declaration) && !hasSelectorExtra) {
+    addStyleToMap(declaration, attrClass);
+  } else if (hasSelectorExtra) {
+    const cssSelector = selectorExtra.map(extra => {
+      return `.${attrClass} ${extra}`;
+    }).join(',\n');
+
+    _fs.default.appendFileSync(_commandLine.options.output, prettifyCss(cssSelector, declaration));
+  } else {
+    attrClass = styleMap.get(declaration).className;
+  }
+
+  node.attribs[attr] = undefined; // delete deprecated attr
+
+  addClassToNode(node, attrClass);
+};
+
+const handleDeprecations = node => {
+  if ((0, _deprecatedHtml.isTagDeprecated)(node)) {
+    updateDeprecatedTag(node);
+  }
+
+  const deprecatedAttrs = (0, _deprecatedHtml.getDeprecatedAttrsForNode)(node);
+
+  if (deprecatedAttrs.length > 0) {
+    deprecatedAttrs.forEach(attr => updateDeprecatedAttr(node, attr));
+  }
+
+  deprecationClasses.forEach(classObj => addStyleToMap((0, _sqwish.minify)(classObj.declaration), classObj.className));
+};
+
 const cleanNode = node => {
   if (node.attribs && node.attribs.style) {
     const minStyle = minifyCss(node.attribs.style);
@@ -146,6 +293,7 @@ const cleanNode = node => {
     node.attribs.style = undefined;
   }
 
+  handleDeprecations(node);
   return node;
 };
 
@@ -298,8 +446,8 @@ const cleanSrcFile = (dom, filename) => {
   const badStyles = getBadStyles(dom);
   addInlineStylesToStyleMap(badStyles);
   const htmlOutput = _commandLine.options['no-replace'] === undefined ? filename : createModifiedName(filename, _commandLine.options['no-replace']);
-  styleMapToCssFile(_commandLine.options.output);
   cleanHtmlTags(dom);
+  styleMapToCssFile(_commandLine.options.output);
   outputModifiedSrcFile(dom, htmlOutput);
 }; // do the stuff, but on a directory
 
@@ -364,18 +512,20 @@ const filterFiletypes = filenames => {
 const run = async function (runOptions) {
   // use options instead of runOptions if being run through
   // cli as opposed to via another script
-  if (!runOptions) {
-    runOptions = _commandLine.options;
+  if (runOptions) {
+    _commandLine.options = (runOptions, function () {
+      throw new Error('"' + "options" + '" is read-only.');
+    }());
   }
 
-  if (runOptions.help || !runOptions.src && !runOptions.directory) {
+  if (_commandLine.options.help || !_commandLine.options.src && !_commandLine.options.directory) {
     // print help message if not used properly
     console.log(_commandLine.usage);
-  } else if (runOptions.directory) {
-    runDir(runOptions);
+  } else if (_commandLine.options.directory) {
+    runDir(_commandLine.options);
   } else {
     // didn't use directory mode
-    let filenames = runOptions.src;
+    let filenames = _commandLine.options.src;
     filenames = filterFiletypes(filenames);
 
     for (let i = 0; i < filenames.length; i++) {

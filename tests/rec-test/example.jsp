@@ -44,15 +44,23 @@ padding:5px;
 	<sql:setDataSource var="bunny" dataSource="jdbc/vid_53" />
 	
 	<sql:query var="rabbit" dataSource="${bunny }">SELECT id, imageName, image_extension FROM images</sql:query>
-		
-	<table style="text-align:left;">
-		<tr><th>id</th><th>name</th><th>extension</th></tr>
-		<c:forEach var="row" items="${rabbit.rows }" >	
+	
+	<center>
+		<table style="text-align:left;">
 			<tr>
-			<th style="font-weight:bold">record ${row.id }</th><td>${row.imageName }</td><td>${row.image_extension }</td>
-			</tr>	
-		</c:forEach>	
-	</table>	
+				<th>id</th>
+				<th>name</th>
+				<th>extension</th>
+			</tr>
+			<c:forEach var="row" items="${rabbit.rows }" >	
+				<tr>
+					<th style="font-weight:bold">record ${row.id }</th>
+					<td>${row.imageName }</td>
+					<td>${row.image_extension }</td>
+				</tr>	
+			</c:forEach>	
+		</table>
+	</center>	
 	
 	</div>
 	
