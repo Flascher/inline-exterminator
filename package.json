@@ -5,6 +5,8 @@
   "main": "dist/inline-exterminator.js",
   "scripts": {
     "test": "npm run build && node dist/index.js tests/example.jsp -o example_jsp.css --no-replace modified",
+    "test-dir": "npm run build && node dist/index.js -d tests -o example_dir.css --no-replace modified",
+    "test-rec": "npm run build && node dist/index.js -r -d tests -o example_rec.css --no-replace modified",
     "build": "babel src --out-dir dist && npm run shebang",
     "shebang": "printf '%s\n%s\n' '#!/usr/bin/env node' \"$(cat dist/index.js)\" > dist/index.js"
   },
