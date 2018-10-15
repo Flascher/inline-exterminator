@@ -114,9 +114,22 @@ const validHtmlTags = [
 ];
 
 const foundTags = new Map();
+const promptedTags = [];
 
 const createClosingTag = (tagname, closingTagStr) => {
   return closingTagStr.replace(/\[name\]/, tagname);
+}
+
+const outputHelpPrompt = () => {
+  console.log('Non-standard HTML tag(s) have been found.\n');
+  console.log('In order to preserve potentially crucial serverside elements');
+  console.log('your manual input is required. Please indicate the structure');
+  console.log('of the tag like the following example:\n');
+  console.log('<taglib:test></taglib:test>')
+  console.log('would become:\n');
+  console.log('</[name]>');
+  console.log('[name] will be replaced with the tagname for the current tag (taglib:test)');
+  console.log('Input is optional. If no input is entered the closing tag would not exist.\n');
 }
 
 const handleNonStandardTags = async function(tagname, filename, linenumber) {
@@ -126,15 +139,7 @@ const handleNonStandardTags = async function(tagname, filename, linenumber) {
       fs.appendFileSync('nonStdMap.log', '\n===========================================\n');
 
       // first encounter example prompt
-      console.log('Non-standard HTML tag(s) have been found.\n');
-      console.log('In order to preserve potentially crucial serverside elements');
-      console.log('your manual input is required. Please indicate the structure');
-      console.log('of the tag like the following example:\n');
-      console.log('<taglib:test></taglib:test>')
-      console.log('would become:\n');
-      console.log('</[name]>');
-      console.log('[name] will be replaced with the tagname for the current tag (taglib:test)');
-      console.log('Input is optional. If no input is entered the closing tag would not exist.\n');
+      outputHelpPrompt();
     }
 
     // pad for a maximum of 5 digit linenumbers (: + 5 digit line number = 6) 
@@ -151,6 +156,37 @@ const handleNonStandardTags = async function(tagname, filename, linenumber) {
   }
 }
 
+const buildNonStandardTagFile = (tagname, filename, linenumber) => {
+  if (!promptedTags.includes(tagname)) {
+    promptedTags.push(tagname);
+
+    const locationPrompt = `${filename}:${linenumber}`;
+    const prompt = `${locationPrompt} | tag: <${tagname} ...> : \n`;
+    fs.appendFileSync('non-std-tags.txt', prompt);
+  }
+}
+
+const waitForTagFileEdit = async function() {
+  console.log('A file named \'non-std-tags.txt\' has been created');
+  console.log('in the directory you ran this script from. Please edit');
+  console.log('each line according to how the closing tag should');
+  console.log('be structured.\n');
+
+  await waitForInput('Please press enter when done...');
+
+  const lines = fs.readFileSync('non-std-tags.txt', 'utf8').split('\n');
+  lines.forEach(line => {
+    if (line.length > 0) {
+      const tagname = line.match(/<(.*?)\s*?\.\.\./)[1];
+      const closingTag = line.match(/\s:\s*(.*)/)[1] || '';
+
+      foundTags.set(tagname, createClosingTag(tagname, closingTag));
+    }
+  });
+
+  fs.unlinkSync('non-std-tags.txt');
+}
+
 const getTagMap = () => {
   return foundTags;
 }
@@ -158,5 +194,7 @@ const getTagMap = () => {
 export {
   handleNonStandardTags,
   validHtmlTags,
+  buildNonStandardTagFile,
+  waitForTagFileEdit,
   getTagMap
 };

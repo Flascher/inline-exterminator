@@ -48,6 +48,10 @@ const optionDefinitions = [{
   alias: 'n',
   type: String
 }, {
+  name: 'interactive',
+  alias: 'i',
+  type: Boolean
+}, {
   name: 'output',
   alias: 'o',
   type: String
@@ -91,6 +95,10 @@ const sections = [{
     alias: 'n',
     typeLabel: '{underline suffix}',
     description: 'The suffix to add onto the end of the html files it would otherwise modify directly ' + 'i.e.: test.html would become test.{underline suffix}.html\n'
+  }, {
+    name: 'interactive',
+    alias: 'i',
+    description: 'If interactive mode is specified, non-standard closing tag input will be gathered on the command line ' + 'line by line, as opposed to the default input file that is generated.'
   }, {
     name: 'output',
     alias: 'o',

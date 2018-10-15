@@ -198,6 +198,7 @@ const updateDeprecatedAttr = (node, attr) => {
   let declaration = '';
   let selectorExtra = '';
   let hasSelectorExtra = false;
+  let value, unit;
 
   switch (attr) {
     case 'align':
@@ -211,28 +212,40 @@ const updateDeprecatedAttr = (node, attr) => {
       break;
 
     case 'border':
-      attrClass = `border-width-${node.attribs[attr]}`;
-      declaration = `border-width:${node.attribs[attr]};`;
+      const borderMatch = node.attribs[attr].match(/^(\d*|\d*\.\d*)(\w*)$/);
+      value = borderMatch[1] || '';
+      unit = borderMatch[2] || '';
+      unit = unit === '' ? 'px' : unit;
+      attrClass = `border-width-${value}${unit}`;
+      declaration = `border-width:${value}${unit};`;
       break;
 
     case 'cellpadding':
-      attrClass = `padding-${node.attribs[attr]}`;
-      declaration = `border-collapse:collapse;padding:${node.attribs[attr]};`;
+      const paddingMatch = node.attribs[attr].match(/^(\d*|\d*\.\d*)(\w*)$/);
+      value = paddingMatch[1] || '';
+      unit = paddingMatch[2] || '';
+      unit = unit === '' ? 'px' : unit;
+      attrClass = `padding-${value}${unit}`;
+      declaration = `border-collapse:collapse;padding:${value}${unit};`;
       selectorExtra = ['th', 'td'];
       hasSelectorExtra = true;
       break;
 
     case 'cellspacing':
-      attrClass = `border-spacing-${node.attribs[attr]}`;
-      declaration = `border-collapse:collapse;border-spacing:${node.attribs[attr]};`;
+      const spacingMatch = node.attribs[attr].match(/^(\d*|\d*\.\d*)(\w*)$/);
+      value = spacingMatch[1] || '';
+      unit = spacingMatch[2] || '';
+      unit = unit === '' ? 'px' : unit;
+      attrClass = `border-spacing-${value}${unit}`;
+      declaration = `border-collapse:collapse;border-spacing:${value}${unit};`;
       selectorExtra = ['th', 'td'];
       hasSelectorExtra = true;
       break;
 
     case 'width':
       const match = node.attribs[attr].match(/^(\d*|\d*\.\d*)(\w*)$/);
-      let value = match[1] || '';
-      let unit = match[2] || '';
+      value = match[1] || '';
+      unit = match[2] || '';
       unit = unit === '' ? 'px' : unit;
       attrClass = `width-${value}${unit}`;
       declaration = `width:${value}${unit};`;
@@ -433,12 +446,17 @@ const getFirstTagLineNumber = (filename, name) => {
   }
 };
 
-const getInvalidTagInput = async function () {
+const getInvalidTagInput = async function (isInteractive) {
   for (const tag of invalidTags) {
     const name = tag.name;
     const filename = tag.filename;
     const linenumber = getFirstTagLineNumber(filename, name);
-    await (0, _handleNonstdTags.handleNonStandardTags)(name, filename, linenumber);
+
+    if (isInteractive) {
+      await (0, _handleNonstdTags.handleNonStandardTags)(name, filename, linenumber);
+    } else {
+      (0, _handleNonstdTags.buildNonStandardTagFile)(name, filename, linenumber);
+    }
   }
 };
 
@@ -452,7 +470,7 @@ const cleanSrcFile = (dom, filename) => {
 }; // do the stuff, but on a directory
 
 
-const runDir = async function (runOptions, workingDir) {
+const preParseDir = async function (runOptions, workingDir) {
   let dir = workingDir === undefined ? runOptions.directory : workingDir;
 
   let entities = _fs.default.readdirSync(dir);
@@ -476,7 +494,42 @@ const runDir = async function (runOptions, workingDir) {
     let preParser = new _htmlparser.default.Parser(parserOptions.callbacks, parserOptions.options);
     preParser.write(fileContents);
     preParser.end();
-    await getInvalidTagInput();
+    await getInvalidTagInput(runOptions.interactive);
+    let parser = new _htmlparser.default.Parser(createParseHandler(filename), parserOptions.options);
+    parser.parseComplete(fileContents);
+  }
+
+  ;
+
+  if (runOptions.recursive && !isLeafDir) {
+    for (const d of dirs) {
+      await runDir(runOptions, `${dir}/${d}`);
+    }
+  } else {
+    return;
+  }
+};
+
+const runDir = async function (runOptions, workingDir) {
+  let dir = workingDir === undefined ? runOptions.directory : workingDir;
+
+  let entities = _fs.default.readdirSync(dir);
+
+  let files = [];
+  let dirs = [];
+  entities.forEach(entity => {
+    if (_fs.default.lstatSync(`${dir}/${entity}`).isFile()) {
+      files.push(entity);
+    } else if (_fs.default.lstatSync(`${dir}/${entity}`).isDirectory()) {
+      dirs.push(entity);
+    }
+  });
+  files = filterFiletypes(files);
+  const isLeafDir = dirs.length === 0;
+
+  for (const file of files) {
+    let filename = `${dir}/${file}`;
+    let fileContents = getFileContents(filename);
     let parser = new _htmlparser.default.Parser(createParseHandler(filename), parserOptions.options);
     parser.parseComplete(fileContents);
   }
@@ -522,6 +575,7 @@ const run = async function (runOptions) {
     // print help message if not used properly
     console.log(_commandLine.usage);
   } else if (_commandLine.options.directory) {
+    preParseDir(_commandLine.options);
     runDir(_commandLine.options);
   } else {
     // didn't use directory mode
@@ -535,9 +589,24 @@ const run = async function (runOptions) {
       let preParser = new _htmlparser.default.Parser(parserOptions.callbacks, parserOptions.options);
       preParser.write(fileContents);
       preParser.end();
-      await getInvalidTagInput();
-      let parser = new _htmlparser.default.Parser(createParseHandler(currentFile), parserOptions.options);
-      parser.parseComplete(fileContents);
+
+      if (_commandLine.options.interactive) {
+        await getInvalidTagInput(_commandLine.options.interactive);
+      }
+    }
+
+    if (!_commandLine.options.interactive) {
+      await (0, _handleNonstdTags.waitForTagFileEdit)();
+
+      for (let i = 0; i < filenames.length; i++) {
+        let currentFile = filenames[i];
+        let fileContents = getFileContents(currentFile);
+        let parser = new _htmlparser.default.Parser(createParseHandler(currentFile), {
+          decodeEntities: true,
+          lowerCaseTags: false
+        });
+        parser.parseComplete(fileContents);
+      }
     }
   }
 }; // start up the script when run from command line
