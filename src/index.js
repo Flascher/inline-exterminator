@@ -484,14 +484,11 @@ const preParseDir = async function(runOptions, workingDir) {
     preParser.end();
     
     await getInvalidTagInput(runOptions.interactive);
-    
-    let parser = new htmlparser.Parser(createParseHandler(filename), parserOptions.options);
-    parser.parseComplete(fileContents);
   };
 
   if (runOptions.recursive && !isLeafDir) {
     for (const d of dirs) {
-      await runDir(runOptions, `${dir}/${d}`);
+      await preParseDir(runOptions, `${dir}/${d}`);
     }
   } else {
     return;
@@ -524,7 +521,7 @@ const runDir = async function(runOptions, workingDir) {
     let filename = `${dir}/${file}`;
     let fileContents = getFileContents(filename);
     
-    let parser = new htmlparser.Parser(createParseHandler(filename), parserOptions.options);
+    let parser = new htmlparser.Parser(createParseHandler(filename), { decodeEntities: true, lowerCaseTags: false });
     parser.parseComplete(fileContents);
   };
 
@@ -565,8 +562,9 @@ const run = async function(runOptions) {
     // print help message if not used properly
     console.log(usage);
   } else if (options.directory) {
-    preParseDir(options);
-    runDir(options);
+    await preParseDir(options);
+    await waitForTagFileEdit();
+    await runDir(options);
   } else {
     // didn't use directory mode
     let filenames = options.src;
@@ -582,9 +580,7 @@ const run = async function(runOptions) {
       preParser.write(fileContents);
       preParser.end();
       
-      if (options.interactive) {
-        await getInvalidTagInput(options.interactive);
-      }
+      await getInvalidTagInput(options.interactive);
     }
 
     if (!options.interactive) {

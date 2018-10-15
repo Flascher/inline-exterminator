@@ -22,6 +22,7 @@ const optionDefinitions = [
   { name: 'filetype', alias: 't', type: String, multiple: true },
   { name: 'no-replace', alias: 'n', type: String },
   { name: 'interactive', alias: 'i', type: Boolean },
+  { name: 'log', type: Boolean },
   { name: 'output', alias: 'o', type: String },
   { name: 'help', alias: 'h', type: Boolean }
 ];
@@ -77,6 +78,12 @@ const sections = [
         alias: 'i',
         description: 'If interactive mode is specified, non-standard closing tag input will be gathered on the command line ' +
                      'line by line, as opposed to the default input file that is generated.'
+      },
+      {
+        name: 'log',
+        description: 'If --log is specified a log file will be created that logs all non standard tags ' +
+                     'as well as how the user responded to the prompt. This could be useful for debugging' +
+                     'and keeping track of how certain tags should be handled across multiple runs.'
       },
       {
         name: 'output',

@@ -15,6 +15,7 @@ const validHtmlTags = ['!--', '!DOCTYPE', 'a', 'abbr', 'acronym', 'address', 'ap
 exports.validHtmlTags = validHtmlTags;
 const foundTags = new Map();
 const promptedTags = [];
+const prompts = [];
 
 const createClosingTag = (tagname, closingTagStr) => {
   return closingTagStr.replace(/\[name\]/, tagname);
@@ -33,7 +34,7 @@ const outputHelpPrompt = () => {
 };
 
 const handleNonStandardTags = async function (tagname, filename, linenumber) {
-  if (!foundTags.has(tagname)) {
+  if (!foundTags.has(tagname) && _commandLine.options.log) {
     // newly encountered non-standard tag
     if (foundTags.size === 0) {
       _fs.default.appendFileSync('nonStdMap.log', '\n===========================================\n'); // first encounter example prompt
@@ -46,11 +47,13 @@ const handleNonStandardTags = async function (tagname, filename, linenumber) {
 
 
     const locationPrompt = `${filename}:${linenumber}`.padEnd(filename.length + 6);
-    const prompt = `${locationPrompt} | tag: <${tagname} : `;
+    const prompt = `${locationPrompt} | tag: <${tagname}`;
     let answer = await (0, _commandLine.waitForInput)(prompt);
     answer = createClosingTag(tagname, answer);
 
-    _fs.default.appendFileSync('nonStdMap.log', `${prompt} ${answer}\n`);
+    if (_commandLine.options.log) {
+      _fs.default.appendFileSync('nonStdMap.log', `${prompt} ${answer}\n`);
+    }
 
     foundTags.set(tagname, createClosingTag(tagname, answer));
   }
@@ -59,18 +62,32 @@ const handleNonStandardTags = async function (tagname, filename, linenumber) {
 exports.handleNonStandardTags = handleNonStandardTags;
 
 const buildNonStandardTagFile = (tagname, filename, linenumber) => {
-  if (!promptedTags.includes(tagname)) {
-    promptedTags.push(tagname);
-    const locationPrompt = `${filename}:${linenumber}`;
-    const prompt = `${locationPrompt} | tag: <${tagname} ...> : \n`;
+  const locationPrompt = `${filename}:${linenumber}`;
+  const prompt = `${locationPrompt} | tag: <${tagname} ...> \n`;
 
-    _fs.default.appendFileSync('non-std-tags.txt', prompt);
+  if (!promptedTags.includes(tagname)) {
+    prompts.push(prompt);
+    promptedTags.push(tagname);
   }
 };
 
 exports.buildNonStandardTagFile = buildNonStandardTagFile;
 
 const waitForTagFileEdit = async function () {
+  // modify the output to keep things in line  
+  const maxLocationLength = Math.max(...prompts.map(prompt => {
+    return prompt.match(/^(.*)\|/)[1].length;
+  }));
+  const maxTagLength = Math.max(...prompts.map(prompt => {
+    return prompt.match(/\| tag:.*/)[0].length;
+  }));
+  prompts.forEach(prompt => {
+    let location = prompt.match(/^.*?:\d+/)[0];
+    let promptEnd = prompt.match(/\| tag:.*/)[0];
+    const formattedPrompt = `${location.padEnd(maxLocationLength)}${promptEnd.padEnd(maxTagLength)} : \n`;
+
+    _fs.default.appendFileSync('non-std-tags.txt', formattedPrompt);
+  });
   console.log('A file named \'non-std-tags.txt\' has been created');
   console.log('in the directory you ran this script from. Please edit');
   console.log('each line according to how the closing tag should');
@@ -83,6 +100,11 @@ const waitForTagFileEdit = async function () {
     if (line.length > 0) {
       const tagname = line.match(/<(.*?)\s*?\.\.\./)[1];
       const closingTag = line.match(/\s:\s*(.*)/)[1] || '';
+
+      if (_commandLine.options.log) {
+        _fs.default.appendFileSync('nonStdMap.log', `${line}${closingTag}\n`);
+      }
+
       foundTags.set(tagname, createClosingTag(tagname, closingTag));
     }
   });
