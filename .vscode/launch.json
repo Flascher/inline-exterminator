@@ -22,7 +22,15 @@
             "request": "launch",
             "name": "Launch Program",
             "program": "${workspaceFolder}/dist/index.js",
-            "args": ["-d", "tests", "-o", "tests.css", "--no-replace", "modified"]
+            "args": ["tests/example.jsp", "-o", "example_jsp.css", "--no-replace", "modified"],
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Program (Dir mode)",
+            "program": "${workspaceFolder}/dist/index.js",
+            "args": ["-d", "tests", "-r", "-o", "example_dir.css", "-n", "modified"]
         }
     ]
 }

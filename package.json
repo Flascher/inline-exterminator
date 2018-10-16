@@ -1,11 +1,14 @@
 {
   "name": "inline-exterminator",
-  "version": "1.0.0",
+  "version": "1.1.3",
   "description": "Takes inline style tags from input, removes them, and outputs a css file with classes matching inline styles",
   "main": "dist/inline-exterminator.js",
   "scripts": {
     "test": "ava",
     "debug-tests": "babel-node --inspect node_modules/ava/profile.js tests/tests.js",
+    "test-single": "npm run build && node dist/index.js tests/example.jsp -o example_jsp.css --no-replace modified",
+    "test-dir": "npm run build && node dist/index.js -d tests -o example_dir.css --no-replace modified",
+    "test-rec": "npm run build && node dist/index.js -r -d tests -o example_rec.css --no-replace modified",
     "build": "babel src --out-dir dist && npm run shebang",
     "dry-run": "npm run build && node dist/index.js example.jsp -o example_jsp.css --no-replace modified",
     "shebang": "printf '%s\n%s\n' '#!/usr/bin/env node' \"$(cat dist/index.js)\" > dist/index.js"
@@ -36,7 +39,7 @@
   "dependencies": {
     "command-line-args": "^5.0.2",
     "command-line-usage": "^5.0.5",
-    "htmlparser": "^1.7.7",
+    "htmlparser2": "^3.9.2",
     "soupselect-update": "^0.2.5",
     "sqwish": "^0.2.2",
     "unique-names-generator": "^1.0.13"

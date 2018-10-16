@@ -1,11 +1,13 @@
 import fs from 'fs';
-import htmlparser from 'htmlparser';
+import htmlparser from 'htmlparser2';
 import { select as $ } from 'soupselect-update';
 import nameGenerator from 'unique-names-generator';
 import { minify } from 'sqwish';
 
 import { cliOptions, usage } from './command-line';
 import html from './htmlparser2html';
+import { handleNonStandardTags, buildNonStandardTagFile, waitForTagFileEdit, getTagMap, validHtmlTags } from './handle-nonstd-tags';
+import { isTagDeprecated, fontTagSizeToCss, getDeprecatedAttrsForNode } from './deprecated-html';
 
 let options;
 
@@ -74,7 +76,10 @@ const addStyleToMap = (minifiedCss, className) => {
   
   if (className !== undefined) {
     key = minifiedCss;
-    value = className;
+    value = {
+      className: className,
+      isUsed: false
+    };
 
     styleMap.set(key, value);
   }
@@ -83,18 +88,26 @@ const addStyleToMap = (minifiedCss, className) => {
     const randomClass = nameGenerator.generate('-');
     key = minifiedCss;
     // remove whitespace from properties for format-agnostic duplicate checking
-    value = randomClass;
+    value = {
+      className: randomClass,
+      isUsed: false
+    };
 
     styleMap.set(key, value);
   }
 }
 
 const styleMapToCssFile = (filename) => {
-  // key = styles (no whitespace) that belong to a class
-  // value = the class name that contains the styles in its key
+  // key = styles properties (minified) that belong to a class
+  // value = an object containing the class name that contains the styles in its key as well as 
+  //         a bool tracking whether this class has already been output to the css file
   styleMap.forEach((v, k) => {
-    const cssString = prettifyCss(`.${v}`, k);
-    fs.appendFileSync(filename, cssString);
+    if(!v.isUsed) {
+      const cssString = prettifyCss(`.${v.className}`, k);
+      fs.appendFileSync(options.output, cssString);
+      const usedValue = { className: v.className, isUsed: true };
+      styleMap.set(k, usedValue);
+    }
   });
 
 }
@@ -109,10 +122,155 @@ const addInlineStylesToStyleMap = (dom) => {
   });
 }
 
+let deprecationClasses = [];
+
+const addClassToNode = (node, className) => {
+  if (node.attribs === undefined) {
+    node.attribs = { class: className };
+  } else {
+    if (node.attribs.class === undefined) {
+      node.attribs.class = className;
+    } else {
+      if (node.attribs.class.indexOf(className) === -1) {
+        node.attribs.class = `${node.attribs.class} ${className}`;
+      }
+    }
+  }
+
+  return node;
+}
+
+const updateDeprecatedTag = (node) => {
+  switch (node.name) {
+    case 'center':
+      node.name = 'div';
+
+      addClassToNode(node, 'centered');
+      deprecationClasses.push({ className: 'centered', declaration: 'text-align:center;'});
+      break;
+
+    case 'basefont':
+    case 'font':
+      let fontColor, fontFace, fontSize, declaration;
+      const fontClass = nameGenerator.generate('-');
+      if (node.attribs) {
+        fontColor = node.attribs.color || '';
+        fontFace = node.attribs.face || '';
+        fontSize = fontTagSizeToCss(node.attribs.size);
+
+        declaration = `color:${fontColor};font-family:${fontFace};font-size:${fontSize}`;
+        deprecationClasses.push({ className: fontClass, declaration: declaration});
+      }
+      if (node.children && node.children.length > 0) {
+        const updatedChildren = node.children.map(child => addClassToNode(child, fontClass));
+
+        // find the font tag's index in the children array
+        const fontIndex = node.parent.children.findIndex(child => Object.is(node, child));
+        // replace the font tag with all of its children
+        node.parent.children.splice(fontIndex, 1, ...updatedChildren);
+      }
+      break;
+  }
+}
+
+const updateDeprecatedAttr = (node, attr) => {
+  let attrClass;
+  let declaration = '';
+  let selectorExtra = '';
+  let hasSelectorExtra = false;
+
+  let value, unit;
+  switch (attr) {
+    case 'align':
+      attrClass = `align-${node.attribs[attr]}`;
+      declaration = `text-align:${node.attribs[attr]};`;
+      break;
+
+    case 'bgcolor':
+      attrClass = nameGenerator.generate('-');
+      declaration = `background-color:${node.attribs[attr]};`;
+      break;
+
+    case 'border':
+      const borderMatch = (node.attribs[attr]).match(/^(\d*|\d*\.\d*)(\w*)$/);
+      value = borderMatch[1] || '';
+      unit = borderMatch[2] || '';
+      unit = unit === '' ? 'px' : unit;
+      attrClass = `border-width-${value}${unit}`;
+      declaration = `border-width:${value}${unit};`;
+      break;
+
+    case 'cellpadding':
+      const paddingMatch = (node.attribs[attr]).match(/^(\d*|\d*\.\d*)(\w*)$/);
+      value = paddingMatch[1] || '';
+      unit = paddingMatch[2] || '';
+      unit = unit === '' ? 'px' : unit;
+      attrClass = `padding-${value}${unit}`;
+      declaration = `border-collapse:collapse;padding:${value}${unit};`;
+      selectorExtra = ['th', 'td'];
+      hasSelectorExtra = true;
+      break;
+
+    case 'cellspacing':
+      const spacingMatch = (node.attribs[attr]).match(/^(\d*|\d*\.\d*)(\w*)$/);
+      value = spacingMatch[1] || '';
+      unit = spacingMatch[2] || '';
+      unit = unit === '' ? 'px' : unit;
+      attrClass = `border-spacing-${value}${unit}`;
+      declaration = `border-collapse:collapse;border-spacing:${value}${unit};`;
+      selectorExtra = ['th', 'td'];
+      hasSelectorExtra = true;
+      break;
+
+    case 'width':
+      const match = (node.attribs[attr]).match(/^(\d*|\d*\.\d*)(\w*)$/);
+      value = match[1] || '';
+      unit = match[2] || '';
+      unit = unit === '' ? 'px' : unit;
+      attrClass = `width-${value}${unit}`;
+      declaration = `width:${value}${unit};`;
+      break;
+
+    case 'valign':
+      attrClass = `vert-align-${node.attribs[attr]}`;
+      declaration = `vertical-align:${node.attribs[attr]};`;
+      break;
+    
+    default:
+    return;
+  }
+
+  if (!styleMap.has(declaration) && !hasSelectorExtra) {
+    addStyleToMap(declaration, attrClass);
+  } else if (hasSelectorExtra) {
+    const cssSelector = selectorExtra.map(extra => {
+      return `.${attrClass} ${extra}`;
+    }).join(',\n');
+
+    fs.appendFileSync(options.output, prettifyCss(cssSelector, declaration));
+  } else {
+    attrClass = styleMap.get(declaration).className;
+  }
+
+  node.attribs[attr] = undefined; // delete deprecated attr
+  addClassToNode(node, attrClass);
+}
+
+const handleDeprecations = (node) => {
+  if (isTagDeprecated(node)) {
+    updateDeprecatedTag(node);
+  }
+  const deprecatedAttrs = getDeprecatedAttrsForNode(node);
+  if (deprecatedAttrs.length > 0) {
+    deprecatedAttrs.forEach(attr => updateDeprecatedAttr(node, attr));
+  }
+  deprecationClasses.forEach(classObj => addStyleToMap(minify(classObj.declaration), classObj.className));
+}
+
 const cleanNode = (node) => {
   if (node.attribs && node.attribs.style) {
     const minStyle = minifyCss(node.attribs.style);
-    const replacementClass = styleMap.get(minStyle);
+    const replacementClass = styleMap.get(minStyle).className;
 
     if (!node.attribs.class) {
       node.attribs.class = replacementClass;
@@ -123,6 +281,8 @@ const cleanNode = (node) => {
     // remove that nasty inline style
     node.attribs.style = undefined;
   }
+  
+  handleDeprecations(node);
 
   return node;
 }
@@ -185,9 +345,16 @@ const removeStyleTags = (node, parent) => {
   }
 }
 
+const nonStandardClosingTagHandler = (nonStdMap) => {
+  return (node) => {
+    return nonStdMap.get(node.name);
+  };
+}
+
 const outputModifiedSrcFile = (dom, htmlOutput) => {
-  // html.configure({ disableAttribEscape: true });
-  const rawHtmlOutput = html(dom, removeStyleTags)
+  const nonStdMap = getTagMap();
+
+  const rawHtmlOutput = html(dom, removeStyleTags, nonStandardClosingTagHandler(nonStdMap));
   fs.writeFileSync(htmlOutput, rawHtmlOutput);
 }
 
@@ -195,30 +362,101 @@ const createParseHandler = (filename) => {
   return new htmlparser.DefaultHandler((err, dom) => {
     if (err) {
       console.error(err);
-      process.exit(1); // oh no something bad happened.
+      process.exit(1); // oh no something bad happened
     } else {
       cleanSrcFile(dom, filename);
     }
-  })
+  }, {
+    decodeEntities: true,
+    lowerCaseTags: false
+  });
+}
+
+let invalidTags = [];
+
+const createPreParseHandler = (filename) => {
+  return {
+    callbacks: {
+      onopentag: (name) => {
+        if (!validHtmlTags.includes(name)) {
+          invalidTags.push({ name, filename });
+        }
+      },
+      onreset: () => {
+        linenumber = 1;
+        invalidTags = [];
+      },
+      onerror: (err) => {
+        if (err) {
+          console.error(err);
+          process.exit(1); // oh no something bad happened.
+        }
+      }
+    },
+    options: {
+      decodeEntities: true,
+      lowerCaseTags: false
+    }
+  };
+}
+
+const getFirstTagLineNumber = (filename, name) => {
+  const fileContents = getFileContents(filename);
+
+  const tagRegex = new RegExp(`<${name}\\s`, 'i');
+
+  const firstMatch = tagRegex.exec(fileContents);
+  if (firstMatch === null) {
+    fs.appendFileSync('nonStdMap.log', `Failed to find ${name} in ${filename}\n`);
+
+    return '??';
+  } else {
+    const index = firstMatch.index;
+    const fileBeforeMatch = fileContents.substr(0, index);
+
+    const newLineRegex = /\n/g;
+    let linenumber = 1;
+    let match = newLineRegex.exec(fileBeforeMatch);
+
+    while (match !== null && match.index < index) {
+      linenumber++;
+      match = newLineRegex.exec(fileBeforeMatch);
+    }
+
+    return linenumber;
+  }
+}
+
+const getInvalidTagInput = async function(isInteractive) {
+  for (const tag of invalidTags) {
+    const name = tag.name;
+    const filename = tag.filename;
+    const linenumber = getFirstTagLineNumber(filename, name);
+
+    if (isInteractive) {
+      await handleNonStandardTags(name, filename, linenumber);
+    } else {
+      buildNonStandardTagFile(name, filename, linenumber);
+    }
+  }
 }
 
 const cleanSrcFile = (dom, filename) => {
   const badStyles = getBadStyles(dom);
   addInlineStylesToStyleMap(badStyles);
   
-  
   const htmlOutput = options['no-replace'] === undefined
     ? filename
     : createModifiedName(filename, options['no-replace']);
   
-  styleMapToCssFile(options.output);
-
+    
   cleanHtmlTags(dom);
+  styleMapToCssFile(options.output);
   outputModifiedSrcFile(dom, htmlOutput);
 }
 
 // do the stuff, but on a directory
-const runDir = (runOptions, workingDir) => {
+const preParseDir = async function(runOptions, workingDir) {
   let dir = workingDir === undefined
     ? runOptions.directory
     : workingDir;
@@ -240,16 +478,61 @@ const runDir = (runOptions, workingDir) => {
 
   const isLeafDir = dirs.length === 0;
 
-  files.forEach(file => {
+  for (const file of files) {
     let filename = `${dir}/${file}`;
     let fileContents = getFileContents(filename);
 
-    let parser = new htmlparser.Parser(createParseHandler(filename));
-    parser.parseComplete(fileContents);
-  });
+    const parserOptions = createPreParseHandler(filename);
+    let preParser = new htmlparser.Parser(parserOptions.callbacks, parserOptions.options);
+    preParser.write(fileContents);
+    preParser.end();
+    
+    await getInvalidTagInput(runOptions.interactive);
+  };
 
   if (runOptions.recursive && !isLeafDir) {
-    dirs.forEach(d => runDir(runOptions, `${dir}/${d}`));
+    for (const d of dirs) {
+      await preParseDir(runOptions, `${dir}/${d}`);
+    }
+  } else {
+    return;
+  }
+}
+
+const runDir = async function(runOptions, workingDir) {
+  let dir = workingDir === undefined
+    ? runOptions.directory
+    : workingDir;
+
+  let entities = fs.readdirSync(dir);
+
+  let files = [];
+  let dirs = [];
+
+  entities.forEach(entity => {
+    if (fs.lstatSync(`${dir}/${entity}`).isFile()) {
+      files.push(entity);
+    } else if (fs.lstatSync(`${dir}/${entity}`).isDirectory()) {
+      dirs.push(entity);
+    }
+  });
+
+  files = filterFiletypes(files);
+
+  const isLeafDir = dirs.length === 0;
+
+  for (const file of files) {
+    let filename = `${dir}/${file}`;
+    let fileContents = getFileContents(filename);
+    
+    let parser = new htmlparser.Parser(createParseHandler(filename), { decodeEntities: true, lowerCaseTags: false });
+    parser.parseComplete(fileContents);
+  };
+
+  if (runOptions.recursive && !isLeafDir) {
+    for (const d of dirs) {
+      await runDir(runOptions, `${dir}/${d}`);
+    }
   } else {
     return;
   }
@@ -272,28 +555,62 @@ const filterFiletypes = (filenames) => {
 }
 
 // do the stuff
-const run = (runOptions) => {
+const run = async function(runOptions) {
   // use options instead of runOptions if being run through
   // cli as opposed to via another script
+<<<<<<< HEAD
   options = runOptions;
+=======
+  if (runOptions) {
+    options = runOptions;
+  }
+>>>>>>> master
 
   if (runOptions.help || (!runOptions.src && !runOptions.directory)) {
     // print help message if not used properly
     console.log(usage);
+<<<<<<< HEAD
   } else if (runOptions.directory) {
     runDir(runOptions);
+=======
+  } else if (options.directory) {
+    await preParseDir(options);
+    await waitForTagFileEdit();
+    await runDir(options);
+>>>>>>> master
   } else {
     // didn't use directory mode
     let filenames = options.src;
 
     filenames = filterFiletypes(filenames);
 
+<<<<<<< HEAD
     for (let i = 0; i < runOptions.src.length; i++) {
       let currentFile = runOptions.src[i];
+=======
+    for (let i = 0; i < filenames.length; i++) {
+      let currentFile = filenames[i];
+>>>>>>> master
       let fileContents = getFileContents(currentFile);
       
-      let parser = new htmlparser.Parser(createParseHandler(currentFile));
-      parser.parseComplete(fileContents);
+      const parserOptions = createPreParseHandler(currentFile);
+      let preParser = new htmlparser.Parser(parserOptions.callbacks, parserOptions.options);
+      preParser.write(fileContents);
+      preParser.end();
+      
+      await getInvalidTagInput(options.interactive);
+    }
+
+    if (!options.interactive) {
+      await waitForTagFileEdit();
+
+      for (let i = 0; i < filenames.length; i++) {
+        let currentFile = filenames[i];
+        let fileContents = getFileContents(currentFile);
+
+        let parser = new htmlparser.Parser(createParseHandler(currentFile), { decodeEntities: true, lowerCaseTags: false });
+        parser.parseComplete(fileContents);
+      }
     }
   }
 }
