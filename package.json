@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Flascher/inline-annihilator.git"
+    "url": "git+https://github.com/AlexFlasch/inline-exterminator.git"
   },
   "keywords": [
     "inline",
@@ -30,9 +30,9 @@
     "inlex": "./dist/index.js"
   },
   "bugs": {
-    "url": "https://github.com/Flascher/inline-annihilator/issues"
+    "url": "https://github.com/AlexFlasch/inline-exterminator/issues"
   },
-  "homepage": "https://github.com/Flascher/inline-annihilator#readme",
+  "homepage": "https://github.com/AlexFlasch/inline-exterminator#readme",
   "dependencies": {
     "command-line-args": "^5.0.2",
     "command-line-usage": "^5.0.5",
